@@ -16,20 +16,32 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <psp2/kernel/processmgr.h>
 #include "display.hh"
 
-int main(int argc, char *argv[]) {
-  int rc = display_init();
-  if (rc)
-    return rc;
+SDL_Window *gWindow = nullptr;
+SDL_Renderer *gRenderer = nullptr;
 
-  SDL_Delay(4000);
+int display_init(void) {
+  if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    return -1;
 
-  rc = display_exit();
-  if (rc)
-    return rc;
+  if ((gWindow = SDL_CreateWindow("VitaBrot", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN)) == nullptr)
+    return -1;
 
-  sceKernelExitProcess(0);
+  if ((gRenderer = SDL_CreateRenderer(gWindow, -1, 0)) == nullptr)
+    return -1;
+
+  SDL_RenderPresent(gRenderer);
+  return 0;
+}
+
+int display_exit(void) {
+  SDL_DestroyRenderer(gRenderer);
+  SDL_DestroyWindow(gWindow);
+
+  gWindow = nullptr;
+  gRenderer = nullptr;
+
+  SDL_Quit();
   return 0;
 }

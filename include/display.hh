@@ -16,20 +16,16 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <psp2/kernel/processmgr.h>
-#include "display.hh"
+#pragma once
 
-int main(int argc, char *argv[]) {
-  int rc = display_init();
-  if (rc)
-    return rc;
+#include <SDL2/SDL.h>
 
-  SDL_Delay(4000);
+//Screen dimension constants
+#define SCREEN_WIDTH 960
+#define SCREEN_HEIGHT 544
 
-  rc = display_exit();
-  if (rc)
-    return rc;
+extern SDL_Window *gWindow;
+extern SDL_Renderer *gRenderer;
 
-  sceKernelExitProcess(0);
-  return 0;
-}
+int display_init(void);
+int display_exit(void);
