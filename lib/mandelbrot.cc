@@ -40,6 +40,15 @@ void Mandelbrot::move(float c_re, float c_im, float size) {
   _pixel_size = size / SCREEN_WIDTH;
 }
 
+void Mandelbrot::move_rel(float r_re, float r_im) {
+  _centre += complex(r_re, r_im) * _window_size;
+}
+
+void Mandelbrot::zoom_rel(float rel) {
+  _window_size *= rel;
+  _pixel_size = _window_size / SCREEN_WIDTH;
+}
+
 void Mandelbrot::reset(void) {
   _next_x = _next_y = 0;
   _running = true;

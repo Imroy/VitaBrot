@@ -17,6 +17,7 @@
 */
 
 #include <psp2/kernel/processmgr.h>
+#include <psp2/ctrl.h>
 #include "display.hh"
 #include "mandelbrot.hh"
 
@@ -31,8 +32,44 @@ int main(int argc, char *argv[]) {
   m.set_limit(255);
   m.start_threads();
 
+  sceCtrlSetSamplingMode(SCE_CTRL_MODE_DIGITAL);
+  SceCtrlData ctrl;
   while (1) {
-    // Handle buttons/etc here
+    sceCtrlPeekBufferPositive(0, &ctrl, 1);
+
+    bool changed = false;
+    if (ctrl.buttons & SCE_CTRL_UP) {
+      m.move_rel(0, -0.01);
+      changed = true;
+    }
+
+    if (ctrl.buttons & SCE_CTRL_RIGHT) {
+      m.move_rel(0.01, 0);
+      changed = true;
+    }
+
+    if (ctrl.buttons & SCE_CTRL_DOWN) {
+      m.move_rel(0, 0.01);
+      changed = true;
+    }
+
+    if (ctrl.buttons & SCE_CTRL_LEFT) {
+      m.move_rel(-0.01, 0);
+      changed = true;
+    }
+
+    if (ctrl.buttons & SCE_CTRL_LTRIGGER) {
+      m.zoom_rel(0.9);
+      changed = true;
+    }
+
+    if (ctrl.buttons & SCE_CTRL_RTRIGGER) {
+      m.zoom_rel(1.1);
+      changed = true;
+    }
+
+    if (changed)
+      m.reset();
   }
 
   m.stop_threads();

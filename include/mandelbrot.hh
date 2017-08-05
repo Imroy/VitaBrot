@@ -46,6 +46,12 @@ public:
   // Move the window
   void move(float c_re, float c_im, float size);
 
+  // Move the window relative to its size
+  void move_rel(float r_re, float r_im);
+
+  // Zoom the window relative to its size
+  void zoom_rel(float rel);
+
   // Reset the drawing of pixels
   void reset(void);
 
