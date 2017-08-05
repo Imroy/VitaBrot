@@ -29,10 +29,13 @@ int main(int argc, char *argv[]) {
   m.move(-0.5, 0.0, 3);
   m.reset();
   m.set_limit(255);
+  m.start_threads();
 
   while (1) {
-    m.run();
+    // Handle buttons/etc here
   }
+
+  m.stop_threads();
 
   rc = display_exit();
   if (rc)

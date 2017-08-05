@@ -19,6 +19,7 @@
 #pragma once
 
 #include <SDL2/SDL_pixels.h>
+#include <psp2/kernel/threadmgr.h>
 #include "complex.hh"
 
 class Mandelbrot {
@@ -30,14 +31,29 @@ private:
   uint32_t _iteration_limit;
   SDL_Color *_palette;
 
+  SceUID _coords_mutex;
   void _get_coords(uint32_t& x, uint32_t& y);
+
+  SceUID _threads[4];	// Four threads for the quad-core CPU on the Vita
+
+  // Allow the thread function to access private data and methods
+  friend int Mandelbrot_thread(SceSize argsize, void* argp);
 
 public:
   Mandelbrot();
+  ~Mandelbrot();
 
+  // Move the window
   void move(float c_re, float c_im, float size);
+
+  // Reset the drawing of pixels
   void reset(void);
+
+  // Set the iteration limit
   void set_limit(uint32_t limit);
-  void run(void);
+
+  void start_threads(void);
+
+  void stop_threads(void);
 };
 
