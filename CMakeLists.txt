@@ -25,6 +25,7 @@ include_directories(
 add_executable(${SHORT_NAME}
   src/main.cc
   lib/display.cc
+  lib/mandelbrot.cc
 )
 
 target_link_libraries(${SHORT_NAME}

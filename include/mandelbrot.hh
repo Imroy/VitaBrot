@@ -16,28 +16,28 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <psp2/kernel/processmgr.h>
-#include "display.hh"
-#include "mandelbrot.hh"
+#pragma once
 
-int main(int argc, char *argv[]) {
-  int rc = display_init();
-  if (rc)
-    return rc;
+#include <SDL2/SDL_pixels.h>
+#include "complex.hh"
 
-  Mandelbrot m;
-  m.move(-0.5, 0.0, 3);
-  m.reset();
-  m.set_limit(255);
+class Mandelbrot {
+private:
+  complex _centre;
+  float _window_size, _pixel_size;
+  uint32_t _next_x, _next_y;
+  bool _running;
+  uint32_t _iteration_limit;
+  SDL_Color *_palette;
 
-  while (1) {
-    m.run();
-  }
+  void _get_coords(uint32_t& x, uint32_t& y);
 
-  rc = display_exit();
-  if (rc)
-    return rc;
+public:
+  Mandelbrot();
 
-  sceKernelExitProcess(0);
-  return 0;
-}
+  void move(float c_re, float c_im, float size);
+  void reset(void);
+  void set_limit(uint32_t limit);
+  void run(void);
+};
+
