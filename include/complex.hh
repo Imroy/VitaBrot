@@ -20,151 +20,163 @@
 
 #include <cstdint>
 #include <cmath>
+#include <arm_neon.h>
 
 template <typename T>
 constexpr T sqr(T val) { return val * val; }
 
-// Yes, I know there is std::complex.
-// I want to implement NEON optimisations.
+// NEON optimised complex class
 
 class complex {
 private:
-  float _re, _im;
+  float32x2_t _vec;
+
+  // private constructor from a NEON vector type
+  complex(float32x2_t v) :
+    _vec(v)
+  {}
 
 public:
   complex(float a = 0, float b = 0) :
-    _re(a), _im(b)
+    _vec{a, b}
   {}
 
   complex(const complex& other) :
-    _re(other._re), _im(other._im)
+    _vec(other._vec)
   {}
 
   complex& operator =(const complex& other) {
-    _re = other._re;
-    _im = other._im;
+    _vec = other._vec;
 
     return *this;
   }
 
   complex& operator =(const float other) {
-    _re = other;
-    _im = 0;
+    _vec[0] = other;
+    _vec[1] = 0;
 
     return *this;
   }
 
-  float real(void) const { return _re; }
-  float imag(void) const { return _im; }
+  float real(void) const { return _vec[0]; }
+  float imag(void) const { return _vec[1]; }
 
   complex& operator +=(const complex& other) {
-    _re += other._re;
-    _im += other._im;
+    _vec = vadd_f32(_vec, other._vec);
     return *this;
   }
 
   complex& operator +=(float other) {
-    _re += other;
+    _vec[0] += other;
     return *this;
   }
 
   complex& operator -=(const complex& other) {
-    _re -= other._re;
-    _im -= other._im;
+    _vec = vsub_f32(_vec, other._vec);
     return *this;
   }
 
   complex& operator -=(float other) {
-    _re -= other;
+    _vec[0] -= other;
     return *this;
   }
 
   complex& operator *=(const complex& other) {
-    float a = (_re * other._re) - (_im * other._im);
-    float b = (_re * other._im) + (_im * other._re);
-    _re = a;
-    _im = b;
+    float32x2_t mul1 = vmul_f32(_vec, other._vec);
+    float32x2_t reals = { _vec[0], other._vec[0] }, imags = { other._vec[1], _vec[1] };
+    float32x2_t mul2 = vmul_f32(reals, imags);
+
+    _vec[0] = mul1[0] - mul1[1];
+    _vec[1] = mul2[0] + mul2[1];
 
     return *this;
   }
 
   complex& operator *=(float other) {
-    _re *= other;
-    _im *= other;
+    _vec = vmul_n_f32(_vec, other);
 
     return *this;
   }
 
   friend complex operator +(const complex& a) {
-    return complex(a._re, a._im);
+    return complex(a._vec);
   }
 
   friend complex operator -(const complex& a) {
-    return complex(-a._re, -a._im);
+    return complex(-a._vec[0], -a._vec[1]);
   }
 
   friend complex operator +(const complex& a, const complex& b) {
-    return complex(a._re + b._re,
-		   a._im + b._im);
+    return complex(vadd_f32(a._vec, b._vec));
   }
 
   friend complex operator +(const complex& a, const float b) {
-    return complex(a._re + b,
-		   a._im);
+    return complex(a._vec[0] + b,
+		   a._vec[1]);
   }
 
   friend complex operator +(const float a, const complex& b) {
-    return complex(a + b._re,
-		   b._im);
+    return complex(a + b._vec[0],
+		   b._vec[1]);
   }
 
   friend complex operator -(const complex& a, const complex& b) {
-    return complex(a._re - b._re,
-		   a._im - b._im);
+    return complex(vsub_f32(a._vec, b._vec));
   }
 
   friend complex operator -(const complex& a, const float b) {
-    return complex(a._re - b,
-		   a._im);
+    return complex(a._vec[0] - b,
+		   a._vec[1]);
   }
 
   friend complex operator -(const float a, const complex& b) {
-    return complex(a - b._re,
-		   b._im);
+    return complex(a - b._vec[0],
+		   b._vec[1]);
   }
 
   friend complex operator *(const complex& a, const complex& b) {
-    return complex((a._re * b._re) - (a._im * b._im),
-		   (a._re * b._im) + (a._im * b._re));
+    float32x2_t mul1 = vmul_f32(a._vec, b._vec);
+    float32x2_t reals = { a._vec[0], b._vec[0] }, imags = { b._vec[1], a._vec[1] };
+    float32x2_t mul2 = vmul_f32(reals, imags);
+
+    return complex(mul1[0] - mul1[1],
+		   mul2[0] + mul2[1]);
   }
 
   friend complex operator *(const complex& a, const float b) {
-    return complex(a._re * b,
-		   a._im * b);
+    return complex(vmul_n_f32(a._vec, b));
   }
 
   friend complex operator *(const float a, const complex& b) {
-    return complex(a * b._re,
-		   a * b._im);
+    return complex(vmul_n_f32(b._vec, a));
   }
 
   friend bool operator ==(const complex& a, const complex& b) {
-    return (a._re == b._re) && (a._im == b._im);
+    uint32x2_t eq = vceq_f32(a._vec, b._vec);
+    return eq[0] && eq[1];
   }
 
   friend bool operator !=(const complex& a, const complex& b) {
-    return (a._re != b._re) && (a._im != b._im);
+    uint32x2_t eq = vceq_f32(a._vec, b._vec);
+    return !(eq[0] || eq[1]);
   }
 
-  friend constexpr float real(const complex& c) { return c._re; }
-  friend constexpr float imag(const complex& c) { return c._im; }
+  friend constexpr float real(const complex& c) { return c._vec[0]; }
+  friend constexpr float imag(const complex& c) { return c._vec[1]; }
 
-  friend constexpr float norm(const complex& a) { return sqr(a._re) + sqr(a._im); }
-  friend constexpr float abs(const complex& a) { return sqrt(sqr(a._re) + sqr(a._im)); }
+  friend float norm(const complex& a) {
+    float32x2_t vsqr = vmul_f32(a._vec, a._vec);
+    return vsqr[0] + vsqr[1];
+  }
+
+  friend float abs(const complex& a) {
+    return sqrt(abs(a));
+  }
 
   friend complex sqr(const complex& a) {
-    return complex(sqr(a._re) - sqr(a._im),
-		   2 * a._re * a._im);
+    float32x2_t vsqr = vmul_f32(a._vec, a._vec);
+    return complex(vsqr[0] - vsqr[1],
+		   2 * a._vec[0] * a._vec[1]);
   }
 
 };
