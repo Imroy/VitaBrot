@@ -1,6 +1,8 @@
 .depend
 .depend.bak
 
+build
+
 # Object files
 *.o
 
