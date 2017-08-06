@@ -21,9 +21,11 @@
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_thread.h>
 #include "complex.hh"
+#include "display.hh"
 
 class Mandelbrot {
 private:
+  Display *_display;
   complex _centre;
   float _window_size, _pixel_size;
   uint32_t _next_x, _next_y;
@@ -40,7 +42,7 @@ private:
   friend int Mandelbrot_thread(void* data);
 
 public:
-  Mandelbrot();
+  Mandelbrot(Display& d);
   ~Mandelbrot();
 
   // Move the window

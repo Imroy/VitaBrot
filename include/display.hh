@@ -18,14 +18,42 @@
 
 #pragma once
 
+#include <deque>
 #include <SDL2/SDL.h>
 
-//Screen dimension constants
-#define SCREEN_WIDTH 960
-#define SCREEN_HEIGHT 544
+class Display {
+private:
+  SDL_Window *_window;
+  SDL_Renderer *_renderer;
+  SDL_Texture *_texture;
 
-extern SDL_Window *gWindow;
-extern SDL_Renderer *gRenderer;
+  // Screen dimension constants
+  const int32_t _screen_width = 960, _screen_height = 544;
 
-int display_init(void);
-int display_exit(void);
+  struct _pixel_t {
+    int32_t x, y, size;
+    uint8_t r, g, b, a;
+  };
+
+  SDL_mutex *_update_lock;
+  std::deque<_pixel_t> _pixel_updates;
+
+public:
+  Display();
+  ~Display();
+
+  int Init(void);
+
+  // Add a pixel to the list of pixels to be drawn
+  void Add_pixel(int32_t x, int32_t y, int32_t size, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+
+  // Draw pixels from the list	*** Only in the main thread! ***
+  int Draw_pixels(void);
+
+  // Refresh contents of window	*** Only in the main thread ***
+  int Refresh(void);
+
+  const int32_t width(void) const { return _screen_width; }
+  const int32_t height(void) const { return _screen_height; }
+
+};

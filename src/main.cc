@@ -22,11 +22,12 @@
 #include "mandelbrot.hh"
 
 int main(int argc, char *argv[]) {
-  int rc = display_init();
+  Display disp;
+  int rc = disp.Init();
   if (rc)
     return rc;
 
-  Mandelbrot m;
+  Mandelbrot m(disp);
   m.move(-0.5, 0.0, 3);
   m.reset();
   m.set_limit(255);
@@ -35,6 +36,8 @@ int main(int argc, char *argv[]) {
   sceCtrlSetSamplingMode(SCE_CTRL_MODE_DIGITAL);
   SceCtrlData ctrl;
   while (1) {
+    disp.Draw_pixels();
+
     sceCtrlPeekBufferPositive(0, &ctrl, 1);
 
     bool changed = false;
@@ -73,10 +76,6 @@ int main(int argc, char *argv[]) {
   }
 
   m.stop_threads();
-
-  rc = display_exit();
-  if (rc)
-    return rc;
 
   sceKernelExitProcess(0);
   return 0;

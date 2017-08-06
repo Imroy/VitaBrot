@@ -23,9 +23,10 @@
 template <typename T>
 constexpr T sqr(T val) { return val * val; }
 
-Mandelbrot::Mandelbrot() :
+Mandelbrot::Mandelbrot(Display& d) :
+  _display(&d),
   _centre(-0.5, 0.0),
-  _window_size(3), _pixel_size(_window_size / SCREEN_WIDTH),
+  _window_size(3), _pixel_size(_window_size / _display->width()),
   _next_x(0), _next_y(0),
   _running(false), _shutdown(false),
   _iteration_limit(0),
@@ -40,7 +41,7 @@ Mandelbrot::~Mandelbrot() {
 void Mandelbrot::move(float c_re, float c_im, float size) {
   _centre = complex(c_re, c_im);
   _window_size = size;
-  _pixel_size = size / SCREEN_WIDTH;
+  _pixel_size = size / _display->width();
 }
 
 void Mandelbrot::move_rel(float r_re, float r_im) {
@@ -49,7 +50,7 @@ void Mandelbrot::move_rel(float r_re, float r_im) {
 
 void Mandelbrot::zoom_rel(float rel) {
   _window_size *= rel;
-  _pixel_size = _window_size / SCREEN_WIDTH;
+  _pixel_size = _window_size / _display->width();
 }
 
 void Mandelbrot::reset(void) {
@@ -80,11 +81,11 @@ void Mandelbrot::_get_coords(uint32_t& x, uint32_t& y) {
   y = _next_y;
 
   _next_y++;
-  if (_next_y >= SCREEN_HEIGHT) {
+  if (_next_y >= _display->height()) {
     _next_x++;
-    _next_y -= SCREEN_HEIGHT;
+    _next_y -= _display->height();
 
-    if (_next_x >= SCREEN_WIDTH)
+    if (_next_x >= _display->width())
       _running = false;
   }
 
@@ -121,7 +122,7 @@ int Mandelbrot_thread(void* data) {
     uint32_t x, y;
     m->_get_coords(x, y);
 
-    complex pos(x - (SCREEN_WIDTH * 0.5), (SCREEN_HEIGHT / SCREEN_HEIGHT) * (y - (SCREEN_HEIGHT * 0.5)));
+    complex pos(x - (m->_display->width() * 0.5), (m->_display->height() / m->_display->height()) * (y - (m->_display->height() * 0.5)));
     complex c = m->_centre + (pos * m->_pixel_size);
     uint32_t iteration = 0;
 
@@ -131,13 +132,11 @@ int Mandelbrot_thread(void* data) {
       iteration++;
     } while ((iteration < m->_iteration_limit) && (norm(z) < sqr(2)));
 
-    SDL_SetRenderDrawBlendMode(gRenderer, SDL_BLENDMODE_NONE);
-    SDL_SetRenderDrawColor(gRenderer,
+    m->_display->Add_pixel(x, y, 1,
 			   m->_palette[iteration].r,
 			   m->_palette[iteration].g,
 			   m->_palette[iteration].b,
 			   m->_palette[iteration].a);
-    SDL_RenderDrawPoint(gRenderer, x, y);
   }
 
   return 0;
