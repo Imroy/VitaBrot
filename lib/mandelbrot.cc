@@ -20,6 +20,9 @@
 #include <stdio.h>
 #include "display.hh"
 
+template <typename T>
+constexpr T sqr(T val) { return val * val; }
+
 Mandelbrot::Mandelbrot() :
   _centre(-0.5, 0.0),
   _window_size(3), _pixel_size(_window_size / SCREEN_WIDTH),
