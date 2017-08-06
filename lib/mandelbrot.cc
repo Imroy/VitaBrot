@@ -97,7 +97,7 @@ int Mandelbrot_thread(void* data);
 void Mandelbrot::start_threads(void) {
   for (uint8_t i = 0; i < 4; i++) {
     char name[12];
-    snprintf(name, 11, "Mandelbrot%d", i+1);
+    snprintf(name, 12, "Mandelbrot%d", i+1);
     _threads[i] = SDL_CreateThread(Mandelbrot_thread, name, this);
   }
 }
