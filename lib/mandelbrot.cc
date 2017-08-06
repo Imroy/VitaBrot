@@ -24,14 +24,14 @@ Mandelbrot::Mandelbrot() :
   _centre(-0.5, 0.0),
   _window_size(3), _pixel_size(_window_size / SCREEN_WIDTH),
   _next_x(0), _next_y(0),
-  _running(false),
+  _running(false), _shutdown(false),
   _iteration_limit(0),
   _palette(nullptr),
-  _coords_mutex(sceKernelCreateMutex("coords_mutex", 0, 0, nullptr))
+  _coords_mutex(SDL_CreateMutex())
 {}
 
 Mandelbrot::~Mandelbrot() {
-  sceKernelDeleteMutex(_coords_mutex);
+  SDL_DestroyMutex(_coords_mutex);
 }
 
 void Mandelbrot::move(float c_re, float c_im, float size) {
@@ -71,7 +71,7 @@ void Mandelbrot::set_limit(uint32_t limit) {
 }
 
 void Mandelbrot::_get_coords(uint32_t& x, uint32_t& y) {
-  sceKernelLockMutex(_coords_mutex, 1, nullptr);
+  SDL_LockMutex(_coords_mutex);
 
   x = _next_x;
   y = _next_y;
@@ -85,33 +85,35 @@ void Mandelbrot::_get_coords(uint32_t& x, uint32_t& y) {
       _running = false;
   }
 
-  sceKernelUnlockMutex(_coords_mutex, 1);
+  SDL_UnlockMutex(_coords_mutex);
 }
 
-int Mandelbrot_thread(SceSize argsize, void* argp);
+int Mandelbrot_thread(void* data);
 
 void Mandelbrot::start_threads(void) {
   for (uint8_t i = 0; i < 4; i++) {
     char name[12];
     snprintf(name, 11, "Mandelbrot%d", i+1);
-    _threads[i] = sceKernelCreateThread(name, Mandelbrot_thread, 0x11, 262144, 0, 0x00, nullptr);
-    if (_threads[i] >= 0)
-      sceKernelStartThread(_threads[i], sizeof(Mandelbrot), this);
+    _threads[i] = SDL_CreateThread(Mandelbrot_thread, name, this);
   }
 }
 
 void Mandelbrot::stop_threads(void) {
-  for (uint8_t i = 0; i < 4; i++)
-    if (_threads[i] >= 0)
-      sceKernelDeleteThread(_threads[i]);
+  _shutdown = true;
+  for (uint8_t i = 0; i < 4; i++) {
+    int status;
+    SDL_WaitThread(_threads[i], &status);
+  }
 }
 
-int Mandelbrot_thread(SceSize argsize, void* argp) {
-  Mandelbrot *m = (Mandelbrot*)argp;
+int Mandelbrot_thread(void* data) {
+  Mandelbrot *m = (Mandelbrot*)data;
 
-  while (1) {
-    while (!m->_running)
-      sceKernelDelayThread(1);
+  while (!m->_shutdown) {
+    while (!m->_running && !m->_shutdown)
+      SDL_Delay(1);
+    if (m->_shutdown)
+      return 0;
 
     uint32_t x, y;
     m->_get_coords(x, y);
@@ -134,4 +136,6 @@ int Mandelbrot_thread(SceSize argsize, void* argp) {
 			   m->_palette[iteration].a);
     SDL_RenderDrawPoint(gRenderer, x, y);
   }
+
+  return 0;
 }
