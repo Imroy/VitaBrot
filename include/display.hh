@@ -37,6 +37,7 @@ private:
 
   SDL_mutex *_update_lock;
   std::deque<_pixel_t> _pixel_updates;
+  uint32_t _last_redraw;
 
 public:
   Display();

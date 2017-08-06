@@ -17,12 +17,14 @@
 */
 
 #include "display.hh"
+#include <SDL2/SDL_timer.h>
 
 Display::Display() :
   _window(nullptr),
   _renderer(nullptr),
   _texture(nullptr),
-  _update_lock(SDL_CreateMutex())
+  _update_lock(SDL_CreateMutex()),
+  _last_redraw(-1)
 {}
 
 Display::~Display() {
@@ -53,6 +55,7 @@ int Display::Init(void) {
   // Clear the window
   SDL_RenderClear(_renderer);
   SDL_RenderPresent(_renderer);
+  _last_redraw = SDL_GetTicks();
 
   if ((_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, _screen_width, _screen_height)) == nullptr)
     return -1;
@@ -106,11 +109,16 @@ int Display::Draw_pixels(void) {
 }
 
 int Display::Refresh(void) {
+  uint32_t now = SDL_GetTicks();
+  if (now - _last_redraw <= 16)
+    return 0;
+
   int rc = SDL_RenderCopy(_renderer, _texture, nullptr, nullptr);
   if (rc < 0)
     return rc;
 
   SDL_RenderPresent(_renderer);
+  _last_redraw = now;
 
   return 0;
 }
