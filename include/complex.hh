@@ -20,6 +20,7 @@
 
 #include <cstdint>
 #include <cmath>
+#include <ostream>
 #include <arm_neon.h>
 
 // NEON optimised complex class
@@ -174,6 +175,17 @@ public:
     float32x2_t vsqr = vmul_f32(a._vec, a._vec);
     return complex(vsqr[0] - vsqr[1],
 		   2 * a._vec[0] * a._vec[1]);
+  }
+
+  friend std::ostream& operator <<(std::ostream& os, const complex& c) {
+    os << c._vec[0];
+    if (c._vec[1] < 0)
+      os << " - ";
+    else
+      os << " + ";
+    os << abs(c._vec[1]) << "i";
+
+    return os;
   }
 
 };
