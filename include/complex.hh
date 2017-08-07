@@ -96,6 +96,24 @@ public:
     return *this;
   }
 
+  complex& operator /=(const complex& other) {
+    float32x2_t re = vmul_f32(_vec, other._vec);
+    float32x2_t a_inv = { _vec[1], -_vec[0] }, im = vmul_f32(a_inv, other._vec);
+    float32x2_t h1 = {re[0], im[0] }, h2 = { re[1], im[1] }, num = vadd_f32(h1, h2);
+
+    float32x2_t c2d2 = vmul_f32(other._vec, other._vec);
+    float r_den = 1.0f / (c2d2[0] + c2d2[1]);
+    _vec = vmul_n_f32(num, r_den);
+
+    return *this;
+  }
+
+  complex& operator /=(float other) {
+    _vec = vmul_n_f32(_vec, 1.0f / other);
+
+    return *this;
+  }
+
   friend complex operator +(const complex& a) {
     return complex(a._vec);
   }
@@ -147,6 +165,25 @@ public:
 
   friend complex operator *(const float a, const complex& b) {
     return complex(vmul_n_f32(b._vec, a));
+  }
+
+  friend complex operator /(const complex& a, const complex& b) {
+    float32x2_t re = vmul_f32(a._vec, b._vec);
+    float32x2_t a_inv = { a._vec[1], -a._vec[0] }, im = vmul_f32(a_inv, b._vec);
+    float32x2_t h1 = { re[0], im[0] }, h2 = { re[1], im[1] }, num = vadd_f32(h1, h2);
+
+    float32x2_t c2d2 = vmul_f32(b._vec, b._vec);
+    float r_den = 1.0f / (c2d2[0] + c2d2[1]);
+
+    return complex(vmul_n_f32(num, r_den));
+  }
+
+  friend complex operator /(const complex& a, const float b) {
+    return complex(vmul_n_f32(a._vec, 1.0f / b));
+  }
+
+  friend complex operator /(const float a, const complex& b) {
+    return complex(vmul_n_f32(b._vec, 1.0f / a));
   }
 
   friend bool operator ==(const complex& a, const complex& b) {
