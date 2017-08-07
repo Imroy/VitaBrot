@@ -84,8 +84,8 @@ public:
     float32x2_t reals = { _vec[0], other._vec[0] }, imags = { other._vec[1], _vec[1] };
     float32x2_t mul2 = vmul_f32(reals, imags);
 
-    _vec[0] = mul1[0] - mul1[1];
-    _vec[1] = mul2[0] + mul2[1];
+    float32x2_t mix1 = { mul1[0], mul2[0] }, mix2 = { -mul1[1], mul2[1] };
+    _vec = vadd_f32(mix1, mix2);
 
     return *this;
   }
@@ -137,8 +137,8 @@ public:
     float32x2_t reals = { a._vec[0], b._vec[0] }, imags = { b._vec[1], a._vec[1] };
     float32x2_t mul2 = vmul_f32(reals, imags);
 
-    return complex(mul1[0] - mul1[1],
-		   mul2[0] + mul2[1]);
+    float32x2_t mix1 = { mul1[0], mul2[0] }, mix2 = { -mul1[1], mul2[1] };
+    return complex(vadd_f32(mix1, mix2));
   }
 
   friend complex operator *(const complex& a, const float b) {
