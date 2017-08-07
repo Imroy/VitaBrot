@@ -168,7 +168,7 @@ public:
   }
 
   friend float abs(const complex& a) {
-    return sqrt(abs(a));
+    return sqrt(norm(a));
   }
 
   friend complex sqr(const complex& a) {
