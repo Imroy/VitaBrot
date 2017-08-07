@@ -28,6 +28,7 @@ Mandelbrot::Mandelbrot(Display& d) :
   _centre(-0.5, 0.0),
   _window_size(3), _pixel_size(_window_size / _display->width()),
   _next_x(0), _next_y(0),
+  _first_pass(6), _pass(_first_pass), _pass_size(1 << _pass),
   _running(false), _shutdown(false),
   _iteration_limit(0),
   _palette(nullptr),
@@ -80,13 +81,28 @@ void Mandelbrot::_get_coords(uint32_t& x, uint32_t& y) {
   x = _next_x;
   y = _next_y;
 
-  _next_y++;
+ increment:
+  _next_y += _pass_size;
   if (_next_y >= _display->height()) {
-    _next_x++;
+    _next_x += _pass_size;
     _next_y -= _display->height();
 
-    if (_next_x >= _display->width())
-      _running = false;
+    if (_next_x >= _display->width()) {
+      if (_pass > 0) {
+	_next_x = _next_y = 0;
+	_pass--;
+	_pass_size = 1 << _pass;
+      } else
+	_running = false;
+    }
+  }
+
+  if (_running && (_pass < _first_pass)) {
+    for (uint8_t pass = _pass + 1; pass <= _first_pass; pass++) {
+      uint32_t mask = (1 << pass) - 1;
+      if (((_next_x & mask) == 0) && ((_next_y & mask) == 0))
+	goto increment;	// Forgive me.
+    }
   }
 
   SDL_UnlockMutex(_coords_mutex);
@@ -132,7 +148,7 @@ int Mandelbrot_thread(void* data) {
       iteration++;
     } while ((iteration < m->_iteration_limit) && (norm(z) < sqr(2)));
 
-    m->_display->Add_pixel(x, y, 1,
+    m->_display->Add_pixel(x, y, m->_pass_size,
 			   m->_palette[iteration].r,
 			   m->_palette[iteration].g,
 			   m->_palette[iteration].b,
