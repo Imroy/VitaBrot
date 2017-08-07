@@ -183,7 +183,7 @@ public:
       os << " - ";
     else
       os << " + ";
-    os << abs(c._vec[1]) << "i";
+    os << std::abs(c._vec[1]) << "i";
 
     return os;
   }
