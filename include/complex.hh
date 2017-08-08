@@ -84,8 +84,8 @@ public:
     float32x2_t reals = { _vec[0], other._vec[0] }, imags = { other._vec[1], _vec[1] };
     float32x2_t mul2 = vmul_f32(reals, imags);
 
-    float32x2_t mix1 = { mul1[0], mul2[0] }, mix2 = { -mul1[1], mul2[1] };
-    _vec = vadd_f32(mix1, mix2);
+    mul1[1] = -mul1[1];
+    _vec = vpadd_f32(mul1, mul2);
 
     return *this;
   }
@@ -99,7 +99,7 @@ public:
   complex& operator /=(const complex& other) {
     float32x2_t re = vmul_f32(_vec, other._vec);
     float32x2_t a_inv = { _vec[1], -_vec[0] }, im = vmul_f32(a_inv, other._vec);
-    float32x2_t h1 = {re[0], im[0] }, h2 = { re[1], im[1] }, num = vadd_f32(h1, h2);
+    float32x2_t num = vpadd_f32(re, im);
 
     float32x2_t c2d2 = vmul_f32(other._vec, other._vec);
     float r_den = 1.0f / (c2d2[0] + c2d2[1]);
@@ -155,8 +155,8 @@ public:
     float32x2_t reals = { a._vec[0], b._vec[0] }, imags = { b._vec[1], a._vec[1] };
     float32x2_t mul2 = vmul_f32(reals, imags);
 
-    float32x2_t mix1 = { mul1[0], mul2[0] }, mix2 = { -mul1[1], mul2[1] };
-    return complex(vadd_f32(mix1, mix2));
+    mul1[1] = -mul1[1];
+    return complex(vpadd_f32(mul1, mul2));
   }
 
   friend complex operator *(const complex& a, const float b) {
@@ -170,7 +170,7 @@ public:
   friend complex operator /(const complex& a, const complex& b) {
     float32x2_t re = vmul_f32(a._vec, b._vec);
     float32x2_t a_inv = { a._vec[1], -a._vec[0] }, im = vmul_f32(a_inv, b._vec);
-    float32x2_t h1 = { re[0], im[0] }, h2 = { re[1], im[1] }, num = vadd_f32(h1, h2);
+    float32x2_t num = vpadd_f32(re, im);
 
     float32x2_t c2d2 = vmul_f32(b._vec, b._vec);
     float r_den = 1.0f / (c2d2[0] + c2d2[1]);
