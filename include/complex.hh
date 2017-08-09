@@ -26,6 +26,11 @@
 template <typename T>
 constexpr T sqr(T val) { return val * val; }
 
+#ifndef __arm__
+#include <complex>
+typedef std::complex<float> complex;
+
+#else
 // NEON optimised complex class
 
 class complex {
@@ -229,3 +234,4 @@ public:
   }
 
 };
+#endif

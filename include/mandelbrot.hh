@@ -20,12 +20,7 @@
 
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_thread.h>
-#ifdef __arm__
 #include "complex.hh"
-#else
-#include <complex>
-typedef std::complex<float> complex;
-#endif
 #include "display.hh"
 
 class Mandelbrot {
