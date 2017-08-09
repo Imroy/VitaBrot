@@ -21,16 +21,17 @@
 #include <cstdint>
 #include <cmath>
 #include <ostream>
-#include <arm_neon.h>
 
 template <typename T>
 constexpr T sqr(T val) { return val * val; }
 
-#ifndef __arm__
+#ifndef __ARM_NEON__
 #include <complex>
 typedef std::complex<float> complex;
 
 #else
+#include <arm_neon.h>
+
 // NEON optimised complex class
 
 class complex {
