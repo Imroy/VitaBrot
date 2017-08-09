@@ -19,6 +19,7 @@
 #include "mandelbrot.hh"
 #include <stdio.h>
 #include "display.hh"
+#include "complexpair.hh"
 
 Mandelbrot::Mandelbrot(Display& d) :
   _display(&d),
@@ -72,11 +73,12 @@ void Mandelbrot::set_limit(uint32_t limit) {
   }
 }
 
-void Mandelbrot::_get_coords(uint32_t& x, uint32_t& y) {
+void Mandelbrot::_get_coords(uint32_t& x, uint32_t& y, uint32_t& size) {
   SDL_LockMutex(_coords_mutex);
 
   x = _next_x;
   y = _next_y;
+  size = _pass_size;
 
  increment:
   _next_y += _pass_size;
@@ -123,8 +125,21 @@ void Mandelbrot::stop_threads(void) {
   }
 }
 
+complex Mandelbrot::_calc_c(uint32_t x, uint32_t y) {
+  return _centre + (complex(x - (_display->width() * 0.5),
+			    (_display->height() / _display->height()) * (y - (_display->height() * 0.5))) * _pixel_size);
+}
+
 int Mandelbrot_thread(void* data) {
   Mandelbrot *m = (Mandelbrot*)data;
+
+  uint32_t x[2], y[2], size[2];
+  m->_get_coords(x[0], y[0], size[0]);
+  m->_get_coords(x[1], y[1], size[1]);
+  complexpair z, c;
+  c.set(0, m->_calc_c(x[0], y[0]));
+  c.set(1, m->_calc_c(x[1], y[1]));
+  uint32_t iter[2] = {0, 0};
 
   while (!m->_shutdown) {
     while (!m->_running && !m->_shutdown)
@@ -132,24 +147,25 @@ int Mandelbrot_thread(void* data) {
     if (m->_shutdown)
       return 0;
 
-    uint32_t x, y;
-    m->_get_coords(x, y);
+    z = sqr(z) + c;
+    iter[0]++;
+    iter[1]++;
 
-    complex pos(x - (m->_display->width() * 0.5), (m->_display->height() / m->_display->height()) * (y - (m->_display->height() * 0.5)));
-    complex c = m->_centre + (pos * m->_pixel_size);
-    uint32_t iteration = 0;
+    float32x2_t n = norm(z);
+    for (uint8_t i = 0; i < 2; i++) {
+      if ((iter[i] >= m->_iteration_limit) || (n[i] >= 4)){
+	m->_display->Add_pixel(x[i], y[i], size[i],
+			       m->_palette[iter[i]].r,
+			       m->_palette[iter[i]].g,
+			       m->_palette[iter[i]].b,
+			       m->_palette[iter[i]].a);
 
-    complex z(0, 0);
-    do {
-      z = sqr(z) + c;
-      iteration++;
-    } while ((iteration < m->_iteration_limit) && (norm(z) < sqr(2)));
-
-    m->_display->Add_pixel(x, y, m->_pass_size,
-			   m->_palette[iteration].r,
-			   m->_palette[iteration].g,
-			   m->_palette[iteration].b,
-			   m->_palette[iteration].a);
+	m->_get_coords(x[i], y[i], size[i]);
+	z.set(i);
+	c.set(i, m->_calc_c(x[i], y[i]));
+	iter[i] = 0;
+      }
+    }
   }
 
   return 0;
