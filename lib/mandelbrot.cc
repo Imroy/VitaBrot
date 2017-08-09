@@ -20,9 +20,6 @@
 #include <stdio.h>
 #include "display.hh"
 
-template <typename T>
-constexpr T sqr(T val) { return val * val; }
-
 Mandelbrot::Mandelbrot(Display& d) :
   _display(&d),
   _centre(-0.5, 0.0),

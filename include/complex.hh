@@ -23,6 +23,9 @@
 #include <ostream>
 #include <arm_neon.h>
 
+template <typename T>
+constexpr T sqr(T val) { return val * val; }
+
 // NEON optimised complex class
 
 class complex {
