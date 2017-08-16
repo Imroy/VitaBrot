@@ -17,9 +17,24 @@
 */
 
 #include <psp2/kernel/processmgr.h>
-#include <psp2/ctrl.h>
+#include <SDL2/SDL_events.h>
 #include "display.hh"
 #include "mandelbrot.hh"
+
+enum joystick_buttons {
+  VITA_TRIANGLE,
+  VITA_CIRCLE,
+  VITA_CROSS,
+  VITA_SQUARE,
+  VITA_LTRIGGER,
+  VITA_RTRIGGER,
+  VITA_DOWN,
+  VITA_LEFT,
+  VITA_UP,
+  VITA_RIGHT,
+  VITA_SELECT,
+  VITA_START,
+};
 
 int main(int argc, char *argv[]) {
   Display disp;
@@ -27,46 +42,51 @@ int main(int argc, char *argv[]) {
   if (rc)
     return rc;
 
+  SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+  SDL_Joystick *joy = SDL_JoystickOpen(0);
+
   Mandelbrot m(disp);
   m.move(-0.5, 0.0, 3);
   m.reset();
   m.set_limit(255);
   m.start_threads();
 
-  sceCtrlSetSamplingMode(SCE_CTRL_MODE_DIGITAL);
-  SceCtrlData ctrl;
-  while (1) {
+  bool running = true;
+  while (running) {
     disp.Draw_pixels();
 
-    sceCtrlPeekBufferPositive(0, &ctrl, 1);
+    if (SDL_JoystickGetButton(joy, VITA_CIRCLE)) {
+      running = false;
+      continue;
+    }
 
     bool changed = false;
-    if (ctrl.buttons & SCE_CTRL_UP) {
+    if (SDL_JoystickGetButton(joy, VITA_UP)) {
       m.move_rel(0, -0.01);
       changed = true;
     }
 
-    if (ctrl.buttons & SCE_CTRL_RIGHT) {
+    if (SDL_JoystickGetButton(joy, VITA_RIGHT)) {
       m.move_rel(0.01, 0);
       changed = true;
     }
 
-    if (ctrl.buttons & SCE_CTRL_DOWN) {
+    if (SDL_JoystickGetButton(joy, VITA_DOWN)) {
       m.move_rel(0, 0.01);
       changed = true;
     }
 
-    if (ctrl.buttons & SCE_CTRL_LEFT) {
+    if (SDL_JoystickGetButton(joy, VITA_LEFT)) {
       m.move_rel(-0.01, 0);
       changed = true;
     }
 
-    if (ctrl.buttons & SCE_CTRL_LTRIGGER) {
+    if (SDL_JoystickGetButton(joy, VITA_LTRIGGER)) {
       m.zoom_rel(0.9);
       changed = true;
     }
 
-    if (ctrl.buttons & SCE_CTRL_RTRIGGER) {
+    if (SDL_JoystickGetButton(joy, VITA_RTRIGGER)) {
       m.zoom_rel(1.1);
       changed = true;
     }
@@ -76,6 +96,8 @@ int main(int argc, char *argv[]) {
   }
 
   m.stop_threads();
+
+  SDL_JoystickClose(joy);
 
   sceKernelExitProcess(0);
   return 0;
