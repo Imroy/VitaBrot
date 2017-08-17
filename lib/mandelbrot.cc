@@ -63,7 +63,7 @@ void Mandelbrot::set_limit(uint32_t limit) {
   if (_palette != nullptr)
     delete [] _palette;
 
-  _palette = new SDL_Color[limit];
+  _palette = new SDL_Color[limit+1];
 
   for (uint32_t i = 0; i < limit; i++) {
     _palette[i].r = (i * 71) & 0xff;
@@ -71,6 +71,10 @@ void Mandelbrot::set_limit(uint32_t limit) {
     _palette[i].b = (i * 91) & 0xff;
     _palette[i].a = 255;
   }
+  _palette[limit].r = 0;
+  _palette[limit].g = 0;
+  _palette[limit].b = 0;
+  _palette[limit].a = 255;
 }
 
 void Mandelbrot::_get_coords(uint32_t& x, uint32_t& y, uint32_t& size) {
