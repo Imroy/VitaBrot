@@ -28,7 +28,7 @@ private:
   Display *_display;
   complex _centre;
   float _window_size, _pixel_size;
-  uint32_t _next_x, _next_y, _first_pass, _pass, _pass_size;
+  int32_t _next_x, _next_y, _first_pass, _pass, _pass_size;
   bool _running, _shutdown;
   uint32_t _iteration_limit;
   SDL_Color *_palette;
