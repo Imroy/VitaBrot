@@ -38,9 +38,6 @@ enum joystick_buttons {
 
 int main(int argc, char *argv[]) {
   Display disp;
-  int rc = disp.Init();
-  if (rc)
-    return rc;
 
   SDL_InitSubSystem(SDL_INIT_JOYSTICK);
   SDL_Joystick *joy = SDL_JoystickOpen(0);

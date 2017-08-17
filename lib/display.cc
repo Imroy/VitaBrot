@@ -25,7 +25,33 @@ Display::Display() :
   _texture(nullptr),
   _update_lock(SDL_CreateMutex()),
   _last_redraw(-1)
-{}
+{
+  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    return;
+  }
+
+  _window = SDL_CreateWindow("VitaBrot", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, _screen_width, _screen_height, SDL_WINDOW_SHOWN);
+  if (_window == nullptr) {
+    return;
+  }
+
+  _renderer = SDL_CreateRenderer(_window, -1, 0);
+  if (_renderer == nullptr) {
+    return;
+  }
+
+  // Clear the window
+  SDL_RenderClear(_renderer);
+  SDL_RenderPresent(_renderer);
+  _last_redraw = SDL_GetTicks();
+
+  _texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, _screen_width, _screen_height);
+  if (_texture == nullptr) {
+    return;
+  }
+
+  // TODO: Clear the texture to solid black
+}
 
 Display::~Display() {
   SDL_DestroyMutex(_update_lock);
@@ -40,32 +66,6 @@ Display::~Display() {
     SDL_DestroyWindow(_window);
 
   SDL_Quit();
-}
-
-int Display::Init(void) {
-  if (SDL_Init(SDL_INIT_VIDEO) < 0)
-    return -1;
-
-  if ((_window = SDL_CreateWindow("VitaBrot", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, _screen_width, _screen_height, SDL_WINDOW_SHOWN)) == nullptr)
-    return -1;
-
-  if ((_renderer = SDL_CreateRenderer(_window, -1, 0)) == nullptr)
-    return -1;
-
-  // Clear the window
-  SDL_RenderClear(_renderer);
-  SDL_RenderPresent(_renderer);
-  _last_redraw = SDL_GetTicks();
-
-  if ((_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, _screen_width, _screen_height)) == nullptr)
-    return -1;
-
-  SDL_SetRenderTarget(_renderer, _texture);
-  // Clear the texture to solid black
-  SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
-  SDL_RenderClear(_renderer);
-
-  return 0;
 }
 
 void Display::Add_pixel(int32_t x, int32_t y, int32_t size, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
@@ -114,8 +114,9 @@ int Display::Refresh(void) {
     return 0;
 
   int rc = SDL_RenderCopy(_renderer, _texture, nullptr, nullptr);
-  if (rc < 0)
+  if (rc < 0) {
     return rc;
+  }
 
   SDL_RenderPresent(_renderer);
   _last_redraw = now;
