@@ -158,11 +158,11 @@ int Mandelbrot_thread(void* data) {
     float32x2_t n = norm(z);
     for (uint8_t i = 0; i < 2; i++) {
       if ((iter[i] >= m->_iteration_limit) || (n[i] >= 4)){
-	m->_display->Add_pixel(x[i], y[i], size[i],
-			       m->_palette[iter[i]].r,
-			       m->_palette[iter[i]].g,
-			       m->_palette[iter[i]].b,
-			       m->_palette[iter[i]].a);
+	m->_display->Draw_pixel(x[i], y[i], size[i],
+				m->_palette[iter[i]].r,
+				m->_palette[iter[i]].g,
+				m->_palette[iter[i]].b,
+				m->_palette[iter[i]].a);
 
 	m->_get_coords(x[i], y[i], size[i]);
 	z.set(i);

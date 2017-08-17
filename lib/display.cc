@@ -23,7 +23,6 @@ Display::Display() :
   _window(nullptr),
   _renderer(nullptr),
   _texture(nullptr),
-  _update_lock(SDL_CreateMutex()),
   _last_redraw(-1)
 {
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -54,8 +53,6 @@ Display::Display() :
 }
 
 Display::~Display() {
-  SDL_DestroyMutex(_update_lock);
-
   if (_texture != nullptr)
     SDL_DestroyTexture(_texture);
 
@@ -68,44 +65,24 @@ Display::~Display() {
   SDL_Quit();
 }
 
-void Display::Add_pixel(int32_t x, int32_t y, int32_t size, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-  // Lock access to the _pixel_updates list
-  if (SDL_LockMutex(_update_lock) < 0)
-    return;
+void Display::Draw_pixel(int32_t x, int32_t y, int32_t size, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+  SDL_Rect rect = { x, y, size, size };
+  uint32_t value = ((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)g << 8) | r;
 
-  _pixel_updates.push_back({ x, y, size, r, g, b, a });
-  SDL_UnlockMutex(_update_lock);
-}
+  if (rect.x + rect.w >= _screen_width)
+    rect.w = _screen_width - 1 - rect.x;
+  if (rect.y + rect.h >= _screen_height)
+    rect.h = _screen_height - 1 - rect.y;
 
-int Display::Draw_pixels(void) {
-  if (_pixel_updates.empty())
-    return 0;
+  uint32_t pixels[rect.w * rect.h];
+  int pitch = rect.w << 2;
 
-  SDL_SetRenderTarget(_renderer, _texture);
-  SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_NONE);
-  while (1) {
-    // Lock access to the _pixel_updates list
-    if (SDL_LockMutex(_update_lock) < 0)
-      return -1;
 
-    if (_pixel_updates.empty()) {
-      SDL_UnlockMutex(_update_lock);
-      break;
-    }
+  uint32_t *p = pixels;
+  for (int32_t i = rect.w * rect.h; i; i--, p++)
+    *p = value;
 
-    _pixel_t pixel = _pixel_updates.front();
-    _pixel_updates.pop_front();
-    SDL_UnlockMutex(_update_lock);
-
-    SDL_SetRenderDrawColor(_renderer, pixel.r, pixel.g, pixel.b, pixel.a);
-    SDL_Rect rect = { pixel.x, pixel.y, pixel.size, pixel.size };
-    SDL_RenderFillRect(_renderer, &rect);
-  }
-  SDL_SetRenderTarget(_renderer, nullptr);
-
-  Refresh();
-
-  return 0;
+  SDL_UpdateTexture(_texture, &rect, (void*)pixels, pitch);
 }
 
 int Display::Refresh(void) {
@@ -113,9 +90,11 @@ int Display::Refresh(void) {
   if (now - _last_redraw <= 16)
     return 0;
 
-  int rc = SDL_RenderCopy(_renderer, _texture, nullptr, nullptr);
-  if (rc < 0) {
-    return rc;
+  if (_texture != nullptr) {
+    int rc = SDL_RenderCopy(_renderer, _texture, nullptr, nullptr);
+    if (rc < 0) {
+      return rc;
+    }
   }
 
   SDL_RenderPresent(_renderer);

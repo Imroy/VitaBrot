@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <deque>
 #include <SDL2/SDL.h>
 
 class Display {
@@ -30,24 +29,13 @@ private:
   // Screen dimension constants
   const int32_t _screen_width = 960, _screen_height = 544;
 
-  struct _pixel_t {
-    int32_t x, y, size;
-    uint8_t r, g, b, a;
-  };
-
-  SDL_mutex *_update_lock;
-  std::deque<_pixel_t> _pixel_updates;
   uint32_t _last_redraw;
 
 public:
   Display();
   ~Display();
 
-  // Add a pixel to the list of pixels to be drawn
-  void Add_pixel(int32_t x, int32_t y, int32_t size, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-
-  // Draw pixels from the list	*** Only in the main thread! ***
-  int Draw_pixels(void);
+  void Draw_pixel(int32_t x, int32_t y, int32_t size, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
   // Refresh contents of window	*** Only in the main thread ***
   int Refresh(void);

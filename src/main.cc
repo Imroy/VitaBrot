@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
 
   bool running = true;
   while (running) {
-    disp.Draw_pixels();
+    disp.Refresh();
 
     if (SDL_JoystickGetButton(joy, VITA_CIRCLE)) {
       running = false;
