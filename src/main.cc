@@ -18,6 +18,7 @@
 
 #include <psp2/kernel/processmgr.h>
 #include <SDL2/SDL_events.h>
+#include <psp2/power.h>
 #include "display.hh"
 #include "mandelbrot.hh"
 
@@ -46,6 +47,13 @@ int main(int argc, char *argv[]) {
   m.move(-0.5, 0.0, 3);
   m.reset();
   m.set_limit(255);
+
+  // Maximum performance
+  scePowerSetArmClockFrequency(444);
+  scePowerSetBusClockFrequency(222);
+  scePowerSetGpuClockFrequency(222);
+  scePowerSetGpuXbarClockFrequency(166);
+
   m.start_threads();
 
   bool running = true;
@@ -93,6 +101,12 @@ int main(int argc, char *argv[]) {
   }
 
   m.stop_threads();
+
+  // Maximum battery
+  scePowerSetArmClockFrequency(111);
+  scePowerSetBusClockFrequency(111);
+  scePowerSetGpuClockFrequency(111);
+  scePowerSetGpuXbarClockFrequency(111);
 
   SDL_JoystickClose(joy);
 

@@ -37,6 +37,7 @@ target_link_libraries(${SHORT_NAME}
   SceSysmodule_stub
   SceGxm_stub
   SceCommonDialog_stub
+  ScePower_stub
   m
 )
 
