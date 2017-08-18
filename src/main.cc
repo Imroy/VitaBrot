@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
   SDL_Joystick *joy = SDL_JoystickOpen(0);
 
   Mandelbrot m(disp);
-  m.move(-0.5, 0.0, 3);
+  m.move(-0.5, 0.0, 4.0);
   m.reset();
   m.set_limit(255);
 
