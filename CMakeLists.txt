@@ -15,7 +15,7 @@ include("${VITASDK}/share/vita.cmake" REQUIRED)
 set(VITA_APP_NAME "VitaBrot")
 set(VITA_TITLEID  "VITABROT1")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu14 -O4 -mtune=cortex-a9 -Wall")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -O4 -mtune=cortex-a9 -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O4 -mtune=cortex-a9 -Wall")
 
 include_directories(
@@ -26,6 +26,7 @@ add_executable(${SHORT_NAME}
   src/main.cc
   lib/display.cc
   lib/mandelbrot.cc
+  lib/debuglog.c
 )
 
 target_link_libraries(${SHORT_NAME}

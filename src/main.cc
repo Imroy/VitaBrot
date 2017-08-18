@@ -21,6 +21,7 @@
 #include <psp2/power.h>
 #include "display.hh"
 #include "mandelbrot.hh"
+#include "debuglog.h"
 
 enum joystick_buttons {
   VITA_TRIANGLE,
@@ -38,10 +39,14 @@ enum joystick_buttons {
 };
 
 int main(int argc, char *argv[]) {
+  log_open("ux0:data/vitabrot.log");
   Display disp;
 
   SDL_InitSubSystem(SDL_INIT_JOYSTICK);
   SDL_Joystick *joy = SDL_JoystickOpen(0);
+  if (joy == nullptr) {
+    DEBUG_LOG(SDL_GetError());
+  }
 
   Mandelbrot m(disp);
   m.move(-0.5, 0.0, 4.0);
@@ -109,6 +114,8 @@ int main(int argc, char *argv[]) {
   scePowerSetGpuXbarClockFrequency(111);
 
   SDL_JoystickClose(joy);
+
+  log_close();
 
   sceKernelExitProcess(0);
   return 0;
