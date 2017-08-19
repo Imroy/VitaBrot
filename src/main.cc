@@ -36,6 +36,7 @@ enum joystick_buttons {
   VITA_RIGHT,
   VITA_SELECT,
   VITA_START,
+  VITA_NUM_BUTTONS
 };
 
 int main(int argc, char *argv[]) {
@@ -61,42 +62,64 @@ int main(int argc, char *argv[]) {
 
   m.start_threads();
 
+  bool buttons[VITA_NUM_BUTTONS];
+  for (uint8_t i = 0; i < VITA_NUM_BUTTONS; i++)
+    buttons[i] = false;
+
   bool running = true;
   while (running) {
     disp.Refresh();
 
-    if (SDL_JoystickGetButton(joy, VITA_CIRCLE)) {
+    bool changed = false;
+    SDL_Event ev;
+    while (SDL_PollEvent(&ev)) {
+      switch (ev.type) {
+      case SDL_QUIT:
+	running = false;
+	break;
+
+      case SDL_JOYBUTTONDOWN:
+	buttons[ev.jbutton.button] = true;
+	break;
+
+      case SDL_JOYBUTTONUP:
+	buttons[ev.jbutton.button] = false;
+	break;
+
+      }
+    }
+
+    if (buttons[VITA_CIRCLE]) {
       running = false;
       continue;
     }
 
-    bool changed = false;
-    if (SDL_JoystickGetButton(joy, VITA_UP)) {
+    if (buttons[VITA_UP]) {
       m.move_rel(0, -0.01);
       changed = true;
     }
 
-    if (SDL_JoystickGetButton(joy, VITA_RIGHT)) {
+    if (buttons[VITA_RIGHT]) {
       m.move_rel(0.01, 0);
       changed = true;
     }
 
-    if (SDL_JoystickGetButton(joy, VITA_DOWN)) {
+    if (buttons[VITA_DOWN]) {
       m.move_rel(0, 0.01);
       changed = true;
     }
 
-    if (SDL_JoystickGetButton(joy, VITA_LEFT)) {
+    if (buttons[VITA_LEFT]) {
       m.move_rel(-0.01, 0);
       changed = true;
     }
 
-    if (SDL_JoystickGetButton(joy, VITA_LTRIGGER)) {
+    if (buttons[VITA_LTRIGGER]) {
       m.zoom_rel(0.9);
       changed = true;
     }
 
-    if (SDL_JoystickGetButton(joy, VITA_RTRIGGER)) {
+    if (buttons[VITA_RTRIGGER]) {
       m.zoom_rel(1.1);
       changed = true;
     }
