@@ -74,15 +74,17 @@ void Display::Draw_pixel(int32_t x, int32_t y, int32_t size, uint8_t r, uint8_t 
   if (rect.y + rect.h >= _screen_height)
     rect.h = _screen_height - 1 - rect.y;
 
-  uint32_t pixels[rect.w * rect.h];
-  int pitch = rect.w << 2;
+  uint32_t *pixels;
+  int pitch;
 
+  SDL_LockTexture(_texture, &rect, (void**)&pixels, &pitch);
 
-  uint32_t *p = pixels;
-  for (int32_t i = rect.w * rect.h; i; i--, p++)
-    *p = value;
+  for (int32_t py = 0; py < rect.h; py++) {
+    uint32_t *p = pixels + (py * _screen_width);
+    for (int32_t px = rect.w; px; px--, p++)
+      *p = value;
+  }
 
-  SDL_UpdateTexture(_texture, &rect, (void*)pixels, pitch);
 }
 
 int Display::Refresh(void) {
