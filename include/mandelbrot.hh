@@ -35,6 +35,8 @@ private:
 
   SDL_mutex *_coords_mutex;
   void _get_coords(uint32_t& x, uint32_t& y, uint32_t& size);
+
+  uint32_t _restart_sem;
   complex _calc_c(uint32_t x, uint32_t y);
 
   SDL_Thread *_threads[4];	// Four threads for the quad-core CPU on the Vita

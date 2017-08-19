@@ -30,7 +30,8 @@ Mandelbrot::Mandelbrot(Display& d) :
   _running(false), _shutdown(false),
   _iteration_limit(0),
   _palette(nullptr),
-  _coords_mutex(SDL_CreateMutex())
+  _coords_mutex(SDL_CreateMutex()),
+  _restart_sem(0)
 {}
 
 Mandelbrot::~Mandelbrot() {
@@ -60,6 +61,7 @@ void Mandelbrot::reset(void) {
   _pass = _first_pass;
   _pass_size = 1 << _pass;
   _running = true;
+  _restart_sem++;
 }
 
 SDL_Color colours1[31] = {
@@ -204,8 +206,10 @@ int Mandelbrot_thread(void* data) {
   uint32_t x[2], y[2], size[2];
   complexpair z, c;
   uint32_t iter[2];
+  uint32_t restart_val;
 
  restart:
+  restart_val = m->_restart_sem;
   m->_get_coords(x[0], y[0], size[0]);
   m->_get_coords(x[1], y[1], size[1]);
   c.set(0, m->_calc_c(x[0], y[0]));
@@ -213,13 +217,13 @@ int Mandelbrot_thread(void* data) {
   iter[0] = iter[1] = 0;
 
   while (!m->_shutdown) {
-    if (!m->_running && !m->_shutdown) {
-      while (!m->_running && !m->_shutdown)
-	SDL_Delay(1);
-      if (m->_shutdown)
-	return 0;
+    while (!m->_running && !m->_shutdown)
+      SDL_Delay(1);
+    if (m->_shutdown)
+      return 0;
+
+    if (m->_restart_sem != restart_val)
       goto restart;
-    }
 
     z = sqr(z) + c;
     iter[0]++;
