@@ -140,18 +140,24 @@ int Mandelbrot_thread(void* data) {
   Mandelbrot *m = (Mandelbrot*)data;
 
   uint32_t x[2], y[2], size[2];
+  complexpair z, c;
+  uint32_t iter[2];
+
+ restart:
   m->_get_coords(x[0], y[0], size[0]);
   m->_get_coords(x[1], y[1], size[1]);
-  complexpair z, c;
   c.set(0, m->_calc_c(x[0], y[0]));
   c.set(1, m->_calc_c(x[1], y[1]));
-  uint32_t iter[2] = {0, 0};
+  iter[0] = iter[1] = 0;
 
   while (!m->_shutdown) {
-    while (!m->_running && !m->_shutdown)
-      SDL_Delay(1);
-    if (m->_shutdown)
-      return 0;
+    if (!m->_running && !m->_shutdown) {
+      while (!m->_running && !m->_shutdown)
+	SDL_Delay(1);
+      if (m->_shutdown)
+	return 0;
+      goto restart;
+    }
 
     z = sqr(z) + c;
     iter[0]++;
