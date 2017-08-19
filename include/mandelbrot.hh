@@ -21,23 +21,24 @@
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_thread.h>
 #include "complex.hh"
+#include "complexpair.hh"
 #include "display.hh"
 
 class Mandelbrot {
 private:
   Display *_display;
-  complex _centre;
-  float _window_size, _pixel_size;
-  int32_t _next_x, _next_y, _first_pass, _pass, _pass_size;
-  bool _running, _shutdown;
+  complex _centre[2];
+  float _window_size[2], _pixel_size[2];
   uint32_t _iteration_limit;
+  bool _running, _shutdown, _julia;
   SDL_Palette *_palette;
+
+  int32_t _next_x, _next_y, _first_pass, _pass, _pass_size;
 
   SDL_mutex *_coords_mutex;
   void _get_coords(uint32_t& x, uint32_t& y, uint32_t& size);
 
   uint32_t _restart_sem;
-  complex _calc_c(uint32_t x, uint32_t y);
 
   SDL_Thread *_threads[4];	// Four threads for the quad-core CPU on the Vita
 
@@ -49,6 +50,8 @@ public:
   ~Mandelbrot();
 
   int32_t pass(void) const { return _pass; }
+
+  void switch_type(void);
 
   // Move the window
   void move(float c_re, float c_im, float size);

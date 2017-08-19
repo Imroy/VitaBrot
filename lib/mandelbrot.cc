@@ -19,20 +19,26 @@
 #include "mandelbrot.hh"
 #include <stdio.h>
 #include "display.hh"
-#include "complexpair.hh"
 
 Mandelbrot::Mandelbrot(Display& d) :
   _display(&d),
-  _centre(-0.5, 0.0),
-  _window_size(3), _pixel_size(_window_size / _display->width()),
+  _iteration_limit(0),
+  _running(false), _shutdown(false), _julia(false),
+  _palette(nullptr),
   _next_x(0), _next_y(0),
   _first_pass(6), _pass(_first_pass), _pass_size(1 << _pass),
-  _running(false), _shutdown(false),
-  _iteration_limit(0),
-  _palette(nullptr),
   _coords_mutex(SDL_CreateMutex()),
   _restart_sem(0)
-{}
+{
+  _centre[0] = complex(-0.5, 0.0);
+  _centre[1] = complex(0, 0);
+
+  _window_size[0] = 4;
+  _window_size[1] = 4;
+
+  _pixel_size[0] = _window_size[0] / _display->width();
+  _pixel_size[1] = _window_size[1] / _display->width();
+}
 
 Mandelbrot::~Mandelbrot() {
   SDL_DestroyMutex(_coords_mutex);
@@ -41,19 +47,29 @@ Mandelbrot::~Mandelbrot() {
     SDL_FreePalette(_palette);
 }
 
+void Mandelbrot::switch_type(void) {
+  _julia ^= true;
+
+  if (_julia) {
+    _centre[1] = complex(0, 0);
+    _window_size[1] = 4;
+    _pixel_size[1] = _window_size[1] / _display->width();
+  }
+}
+
 void Mandelbrot::move(float c_re, float c_im, float size) {
-  _centre = complex(c_re, c_im);
-  _window_size = size;
-  _pixel_size = size / _display->width();
+  _centre[_julia] = complex(c_re, c_im);
+  _window_size[_julia] = size;
+  _pixel_size[_julia] = size / _display->width();
 }
 
 void Mandelbrot::move_rel(float r_re, float r_im) {
-  _centre += complex(r_re, r_im) * _window_size;
+  _centre[_julia] += complex(r_re, r_im) * _window_size[_julia];
 }
 
 void Mandelbrot::zoom_rel(float rel) {
-  _window_size *= rel;
-  _pixel_size = _window_size / _display->width();
+  _window_size[_julia] *= rel;
+  _pixel_size[_julia] = _window_size[_julia] / _display->width();
 }
 
 void Mandelbrot::reset(void) {
@@ -195,11 +211,6 @@ void Mandelbrot::stop_threads(void) {
   }
 }
 
-complex Mandelbrot::_calc_c(uint32_t x, uint32_t y) {
-  return _centre + (complex(x - (_display->width() * 0.5),
-			    (_display->height() / _display->height()) * (y - (_display->height() * 0.5))) * _pixel_size);
-}
-
 int Mandelbrot_thread(void* data) {
   Mandelbrot *m = (Mandelbrot*)data;
 
@@ -208,13 +219,27 @@ int Mandelbrot_thread(void* data) {
   uint32_t iter[2];
   uint32_t restart_val;
 
+  auto reset_values = [m, &x, &y, &size, &z, &c, &iter](uint8_t i) {
+    m->_get_coords(x[i], y[i], size[i]);
+    complex point(x[i] - (m->_display->width() * 0.5),
+		  (m->_display->height() / m->_display->height()) * (y[i] - (m->_display->height() * 0.5)));
+    point *= m->_pixel_size[m->_julia];
+    if (m->_julia) {
+      // Julia set
+      z.set(i, m->_centre[1] + point);
+      c.set(i, m->_centre[0]);
+    } else {
+      // Mandelbrot set
+      z.set(i, 0);
+      c.set(i, m->_centre[0] + point);
+    }
+    iter[i] = 0;
+  };
+
  restart:
   restart_val = m->_restart_sem;
-  m->_get_coords(x[0], y[0], size[0]);
-  m->_get_coords(x[1], y[1], size[1]);
-  c.set(0, m->_calc_c(x[0], y[0]));
-  c.set(1, m->_calc_c(x[1], y[1]));
-  iter[0] = iter[1] = 0;
+  reset_values(0);
+  reset_values(1);
 
   while (!m->_shutdown) {
     while (!m->_running && !m->_shutdown)
@@ -235,10 +260,7 @@ int Mandelbrot_thread(void* data) {
 	SDL_Color &col = m->_palette->colors[iter[i]];
 	m->_display->Draw_pixel(x[i], y[i], size[i], col.r, col.g, col.b, col.a);
 
-	m->_get_coords(x[i], y[i], size[i]);
-	z.set(i);
-	c.set(i, m->_calc_c(x[i], y[i]));
-	iter[i] = 0;
+	reset_values(i);
       }
     }
   }
