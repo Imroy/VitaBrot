@@ -115,12 +115,12 @@ int main(int argc, char *argv[]) {
     }
 
     if (buttons[VITA_LTRIGGER]) {
-      m.zoom_rel(0.9);
+      m.zoom_rel(1.05);
       changed = true;
     }
 
     if (buttons[VITA_RTRIGGER]) {
-      m.zoom_rel(1.1);
+      m.zoom_rel(0.95);
       changed = true;
     }
 
