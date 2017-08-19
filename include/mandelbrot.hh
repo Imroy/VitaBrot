@@ -31,7 +31,7 @@ private:
   int32_t _next_x, _next_y, _first_pass, _pass, _pass_size;
   bool _running, _shutdown;
   uint32_t _iteration_limit;
-  SDL_Color *_palette;
+  SDL_Palette *_palette;
 
   SDL_mutex *_coords_mutex;
   void _get_coords(uint32_t& x, uint32_t& y, uint32_t& size);

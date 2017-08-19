@@ -35,6 +35,9 @@ Mandelbrot::Mandelbrot(Display& d) :
 
 Mandelbrot::~Mandelbrot() {
   SDL_DestroyMutex(_coords_mutex);
+
+  if (_palette != nullptr)
+    SDL_FreePalette(_palette);
 }
 
 void Mandelbrot::move(float c_re, float c_im, float size) {
@@ -59,24 +62,83 @@ void Mandelbrot::reset(void) {
   _running = true;
 }
 
+SDL_Color colours1[31] = {
+  {   0,   0,   0, 255 },
+  { 120, 119, 238, 255 },
+  {  24,   7,  25, 255 },
+  { 197,  66,  28, 255 },
+  {  29,  18,  11, 255 },
+  { 135,  46,  71, 255 },
+  {  24,  27,  13, 255 },
+  { 241, 230, 128, 255 },
+  {  17,  31,  24, 255 },
+  { 240, 162, 139, 255 },
+  {  11,   4,  30, 255 },
+  { 106,  87, 189, 255 },
+  {  29,  21,  14, 255 },
+  {  12, 140, 118, 255 },
+  {  10,   6,  29, 255 },
+  {  50, 144,  77, 255 },
+  {  22,   0,  24, 255 },
+  { 148, 188, 243, 255 },
+  {   4,  32,   7, 255 },
+  { 231, 146,  14, 255 },
+  {  10,  13,  20, 255 },
+  { 184, 147,  68, 255 },
+  {  13,  28,   3, 255 },
+  { 169, 248, 152, 255 },
+  {   4,   0,  34, 255 },
+  {  62,  83,  48, 255 },
+  {   7,  21,  22, 255 },
+  { 152,  97, 184, 255 },
+  {   8,   3,  12, 255 },
+  { 247,  92, 235, 255 },
+  {  31,  32,  16, 255 }
+};
+
 void Mandelbrot::set_limit(uint32_t limit) {
   _iteration_limit = limit;
 
   if (_palette != nullptr)
     delete [] _palette;
 
-  _palette = new SDL_Color[limit+1];
+  if (_palette != nullptr)
+    SDL_FreePalette(_palette);
+  _palette = SDL_AllocPalette(limit + 1);
 
-  for (uint32_t i = 0; i < limit; i++) {
-    _palette[i].r = (i * 71) & 0xff;
-    _palette[i].g = (i * 81) & 0xff;
-    _palette[i].b = (i * 91) & 0xff;
-    _palette[i].a = 255;
+  uint32_t n = 0;
+
+  uint32_t segmentsize = 8;
+  int32_t r_segmentsize = 256 / segmentsize;
+  uint32_t nsegments = 31, setsegments = ((limit + 3) * r_segmentsize) >> 8;
+  for (uint32_t i = 0; i < setsegments; i++) {
+    if (i == (setsegments - 1)) {
+      segmentsize = limit - n - 2;
+      r_segmentsize = 256 / segmentsize;
+    }
+
+    SDL_Color &col1 = colours1[i % nsegments], &col2 = colours1[(i + 1) % setsegments % nsegments];
+    int32_t r = col1.r << 8;
+    int32_t g = col1.g << 8;
+    int32_t b = col1.b << 8;
+    int32_t rs = ((((int32_t)col2.r << 8) - r) * r_segmentsize) >> 8;
+    int32_t gs = ((((int32_t)col2.g << 8) - g) * r_segmentsize) >> 8;
+    int32_t bs = ((((int32_t)col2.b << 8) - b) * r_segmentsize) >> 8;
+
+    for (uint32_t y = 0; y < segmentsize; y++) {
+      SDL_Color col = { (uint8_t)(r >> 8), (uint8_t)(g >> 8), (uint8_t)(b >> 8), 255 };
+      SDL_SetPaletteColors(_palette, &col, n++, 1);
+
+      r += rs;
+      g += gs;
+      b += bs;
+    }
   }
-  _palette[limit].r = 0;
-  _palette[limit].g = 0;
-  _palette[limit].b = 0;
-  _palette[limit].a = 255;
+
+  while (n < limit + 1) {
+    SDL_Color col = { 0, 0, 0, 255 };
+    SDL_SetPaletteColors(_palette, &col, n++, 1);
+  }
 }
 
 void Mandelbrot::_get_coords(uint32_t& x, uint32_t& y, uint32_t& size) {
@@ -166,11 +228,8 @@ int Mandelbrot_thread(void* data) {
     float32x2_t n = norm(z);
     for (uint8_t i = 0; i < 2; i++) {
       if ((iter[i] >= m->_iteration_limit) || (n[i] >= 4)){
-	m->_display->Draw_pixel(x[i], y[i], size[i],
-				m->_palette[iter[i]].r,
-				m->_palette[iter[i]].g,
-				m->_palette[iter[i]].b,
-				m->_palette[iter[i]].a);
+	SDL_Color &col = m->_palette->colors[iter[i]];
+	m->_display->Draw_pixel(x[i], y[i], size[i], col.r, col.g, col.b, col.a);
 
 	m->_get_coords(x[i], y[i], size[i]);
 	z.set(i);
