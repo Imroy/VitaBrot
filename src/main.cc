@@ -49,16 +49,17 @@ int main(int argc, char *argv[]) {
     DEBUG_LOG(SDL_GetError());
   }
 
-  Mandelbrot m(disp);
-  m.move(-0.5, 0.0, 4.0);
-  m.reset();
-  m.set_limit(255);
 
   // Maximum performance
   scePowerSetArmClockFrequency(444);
   scePowerSetBusClockFrequency(222);
   scePowerSetGpuClockFrequency(222);
   scePowerSetGpuXbarClockFrequency(166);
+
+  Mandelbrot m(disp);
+  m.move(-0.5, 0.0, 4.0);
+  m.reset();
+  m.set_limit(1023);
 
   m.start_threads();
 
