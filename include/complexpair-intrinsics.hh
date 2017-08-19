@@ -16,19 +16,19 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-complexpair& complexpair::operator +=(const complexpair& other) {
+inline complexpair& complexpair::operator +=(const complexpair& other) {
   _reals = _reals + other._reals;
   _imags = _imags + other._imags;
   return *this;
 }
 
-complexpair& complexpair::operator -=(const complexpair& other) {
+inline complexpair& complexpair::operator -=(const complexpair& other) {
   _reals = _reals - other._reals;
   _imags = _imags - other._imags;
   return *this;
 }
 
-complexpair& complexpair::operator *=(const complexpair& other) {
+inline complexpair& complexpair::operator *=(const complexpair& other) {
   float32x2_t re = _reals * other._reals;
   re -= _imags * other._imags;
 
@@ -41,7 +41,7 @@ complexpair& complexpair::operator *=(const complexpair& other) {
   return *this;
 }
 
-complexpair& complexpair::operator /=(const complexpair& other) {
+inline complexpair& complexpair::operator /=(const complexpair& other) {
   float32x2_t den = sqr(other._reals) + sqr(other._imags);
   float32x2_t r_den = 1.0f / den;
 

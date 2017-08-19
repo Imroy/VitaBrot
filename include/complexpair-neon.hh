@@ -16,19 +16,19 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-complexpair& complexpair::operator +=(const complexpair& other) {
+inline complexpair& complexpair::operator +=(const complexpair& other) {
   _reals = vadd_f32(_reals, other._reals);
   _imags = vadd_f32(_imags, other._imags);
   return *this;
 }
 
-complexpair& complexpair::operator -=(const complexpair& other) {
+inline complexpair& complexpair::operator -=(const complexpair& other) {
   _reals = vsub_f32(_reals, other._reals);
   _imags = vsub_f32(_imags, other._imags);
   return *this;
 }
 
-complexpair& complexpair::operator *=(const complexpair& other) {
+inline complexpair& complexpair::operator *=(const complexpair& other) {
   float32x2_t re = vmul_f32(_reals, other._reals);	// ac
   re = vmls_f32(re, _imags, other._imags);		// ac - bd
 
@@ -41,7 +41,7 @@ complexpair& complexpair::operator *=(const complexpair& other) {
   return *this;
 }
 
-complexpair& complexpair::operator /=(const complexpair& other) {
+inline complexpair& complexpair::operator /=(const complexpair& other) {
   float32x2_t den = vadd_f32(vmul_f32(other._reals, other._reals),
 			     vmul_f32(other._imags, other._imags));
   float32x2_t r_den = vrecpe_f32(den);
