@@ -54,6 +54,8 @@ void Mandelbrot::zoom_rel(float rel) {
 
 void Mandelbrot::reset(void) {
   _next_x = _next_y = 0;
+  _pass = _first_pass;
+  _pass_size = 1 << _pass;
   _running = true;
 }
 
