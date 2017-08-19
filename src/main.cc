@@ -94,6 +94,10 @@ int main(int argc, char *argv[]) {
       continue;
     }
 
+    // Don't move/zoom until we've drawn a few passes
+    if (m.pass() > 3)
+      continue;
+
     if (buttons[VITA_UP]) {
       m.move_rel(0, -0.01);
       changed = true;

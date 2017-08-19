@@ -46,6 +46,8 @@ public:
   Mandelbrot(Display& d);
   ~Mandelbrot();
 
+  int32_t pass(void) const { return _pass; }
+
   // Move the window
   void move(float c_re, float c_im, float size);
 
