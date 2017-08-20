@@ -61,8 +61,7 @@ int main(int argc, char *argv[]) {
   m.reset();
   m.set_limit(1023);
 
-  Mandelbrot::Precision prec = Mandelbrot::Precision::Single;
-  m.start_threads(prec);
+  m.start_threads();
 
   bool buttons[VITA_NUM_BUTTONS];
   for (uint8_t i = 0; i < VITA_NUM_BUTTONS; i++)
@@ -140,15 +139,6 @@ int main(int argc, char *argv[]) {
 
     if (changed) {
       last_move = SDL_GetTicks();
-
-      Mandelbrot::Precision this_prec = Mandelbrot::Precision::Single;
-      if (m.window_size() < 0.0000001 * 960)
-	this_prec = Mandelbrot::Precision::Double;
-      if (this_prec != prec) {
-	m.stop_threads();
-	prec = this_prec;
-	m.start_threads(prec);
-      }
       m.reset();
     }
   }

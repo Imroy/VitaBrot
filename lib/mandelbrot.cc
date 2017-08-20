@@ -22,6 +22,7 @@
 
 Mandelbrot::Mandelbrot(Display& d) :
   _display(&d),
+  _prec(32),
   _iteration_limit(0),
   _running(false), _shutdown(false), _julia(false),
   _palette(nullptr),
@@ -61,6 +62,8 @@ void Mandelbrot::move(double c_re, double c_im, double size) {
   _centre[_julia] = std::complex<double>(c_re, c_im);
   _window_size[_julia] = size;
   _pixel_size[_julia] = size / _display->width();
+
+  _check_prec();
 }
 
 void Mandelbrot::move_rel(double r_re, double r_im) {
@@ -70,6 +73,8 @@ void Mandelbrot::move_rel(double r_re, double r_im) {
 void Mandelbrot::zoom_rel(double rel) {
   _window_size[_julia] *= rel;
   _pixel_size[_julia] = _window_size[_julia] / _display->width();
+
+  _check_prec();
 }
 
 void Mandelbrot::reset(void) {
@@ -78,6 +83,17 @@ void Mandelbrot::reset(void) {
   _pass_size = 1 << _pass;
   _running = true;
   _restart_sem++;
+}
+
+void Mandelbrot::_check_prec(void) {
+  uint32_t this_prec = 32;
+  if (_window_size[_julia] < 1e-7 * _display->width())
+    this_prec = 64;
+  if (this_prec != _prec) {
+    stop_threads();
+    _prec = this_prec;
+    start_threads();
+  }
 }
 
 SDL_Color colours1[31] = {
@@ -193,19 +209,12 @@ void Mandelbrot::_get_coords(uint32_t& x, uint32_t& y, uint32_t& size) {
   SDL_UnlockMutex(_coords_mutex);
 }
 
-void Mandelbrot::start_threads(Precision p) {
+void Mandelbrot::start_threads(void) {
   SDL_ThreadFunction fn;
-  switch (p) {
-  default:
-  case Precision::Single:
+  if (_prec <= 32)
     fn = Mandelbrot_sp_thread;
-    break;
-
-  case Precision::Double:
+  else if (_prec <= 64)
     fn = Mandelbrot_dp_thread;
-    break;
-
-  }
 
   for (uint8_t i = 0; i < 4; i++) {
     char name[12];

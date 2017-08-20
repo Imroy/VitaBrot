@@ -25,14 +25,9 @@
 #include "display.hh"
 
 class Mandelbrot {
-public:
-  enum class Precision {
-    Single,
-    Double,
-  };
-
 private:
   Display *_display;
+  uint32_t _prec;
   std::complex<double> _centre[2];
   double _window_size[2], _pixel_size[2];
   uint32_t _iteration_limit;
@@ -52,11 +47,12 @@ private:
   friend int Mandelbrot_sp_thread(void* data);
   friend int Mandelbrot_dp_thread(void* data);
 
+  void _check_prec(void);
+
 public:
   Mandelbrot(Display& d);
   ~Mandelbrot();
 
-  double window_size(void) const { return _window_size[_julia]; }
   int32_t pass(void) const { return _pass; }
 
   void switch_type(void);
@@ -76,7 +72,7 @@ public:
   // Set the iteration limit
   void set_limit(uint32_t limit);
 
-  void start_threads(Precision p = Precision::Single);
+  void start_threads(void);
 
   void stop_threads(void);
 };
