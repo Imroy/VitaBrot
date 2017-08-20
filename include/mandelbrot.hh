@@ -25,6 +25,12 @@
 #include "display.hh"
 
 class Mandelbrot {
+public:
+  enum class Precision {
+    Single,
+    Double,
+  };
+
 private:
   Display *_display;
   std::complex<double> _centre[2];
@@ -43,7 +49,8 @@ private:
   SDL_Thread *_threads[4];	// Four threads for the quad-core CPU on the Vita
 
   // Allow the thread function to access private data and methods
-  friend int Mandelbrot_thread(void* data);
+  friend int Mandelbrot_sp_thread(void* data);
+  friend int Mandelbrot_dp_thread(void* data);
 
 public:
   Mandelbrot(Display& d);
@@ -68,8 +75,10 @@ public:
   // Set the iteration limit
   void set_limit(uint32_t limit);
 
-  void start_threads(void);
+  void start_threads(Precision p = Precision::Single);
 
   void stop_threads(void);
 };
 
+int Mandelbrot_sp_thread(void* data);
+int Mandelbrot_dp_thread(void* data);

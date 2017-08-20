@@ -193,13 +193,24 @@ void Mandelbrot::_get_coords(uint32_t& x, uint32_t& y, uint32_t& size) {
   SDL_UnlockMutex(_coords_mutex);
 }
 
-int Mandelbrot_thread(void* data);
+void Mandelbrot::start_threads(Precision p) {
+  SDL_ThreadFunction fn;
+  switch (p) {
+  default:
+  case Precision::Single:
+    fn = Mandelbrot_sp_thread;
+    break;
 
-void Mandelbrot::start_threads(void) {
+  case Precision::Double:
+    fn = Mandelbrot_dp_thread;
+    break;
+
+  }
+
   for (uint8_t i = 0; i < 4; i++) {
     char name[12];
     snprintf(name, 12, "Mandelbrot%d", i+1);
-    _threads[i] = SDL_CreateThread(Mandelbrot_thread, name, this);
+    _threads[i] = SDL_CreateThread(fn, name, this);
   }
 }
 
@@ -212,7 +223,7 @@ void Mandelbrot::stop_threads(void) {
   _shutdown = false;
 }
 
-int Mandelbrot_thread(void* data) {
+int Mandelbrot_sp_thread(void* data) {
   Mandelbrot *m = (Mandelbrot*)data;
 
   uint32_t x[2], y[2], size[2];
@@ -263,6 +274,59 @@ int Mandelbrot_thread(void* data) {
 
 	reset_values(i);
       }
+    }
+  }
+
+  return 0;
+}
+
+int Mandelbrot_dp_thread(void* data) {
+  Mandelbrot *m = (Mandelbrot*)data;
+
+  uint32_t x, y, size;
+  std::complex<double> z, c;
+  uint32_t iter;
+  uint32_t restart_val;
+
+  auto reset_values = [m, &x, &y, &size, &z, &c, &iter](void) {
+    m->_get_coords(x, y, size);
+    std::complex<double> point(x - (m->_display->width() * 0.5),
+			       (m->_display->height() / m->_display->height()) * (y - (m->_display->height() * 0.5)));
+    point *= m->_pixel_size[m->_julia];
+    if (m->_julia) {
+      // Julia set
+      z = m->_centre[1] + point;
+      c = m->_centre[0];
+    } else {
+      // Mandelbrot set
+      z = 0;
+      c = m->_centre[0] + point;
+    }
+    iter = 0;
+  };
+
+ restart:
+  restart_val = m->_restart_sem;
+  reset_values();
+
+  while (!m->_shutdown) {
+    while (!m->_running && !m->_shutdown)
+      SDL_Delay(1);
+    if (m->_shutdown)
+      return 0;
+
+    if (m->_restart_sem != restart_val)
+      goto restart;
+
+    z = sqr(z) + c;
+    iter++;
+
+    double n = norm(z);
+    if ((iter >= m->_iteration_limit) || (n >= 4)) {
+      SDL_Color &col = m->_palette->colors[iter];
+      m->_display->Draw_pixel(x, y, size, col.r, col.g, col.b, col.a);
+
+      reset_values();
     }
   }
 
