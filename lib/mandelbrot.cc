@@ -223,6 +223,12 @@ void Mandelbrot::start_threads(void) {
   }
 }
 
+template <typename F>
+void Mandelbrot::_draw_point(uint32_t x, uint32_t y, uint32_t size, uint32_t iter, std::complex<F> z) {
+  SDL_Color &col = _palette->colors[iter];
+  _display->Draw_pixel(x, y, size, col.r, col.g, col.b, col.a);
+}
+
 void Mandelbrot::stop_threads(void) {
   _shutdown = true;
   for (uint8_t i = 0; i < 4; i++) {
@@ -278,8 +284,7 @@ int Mandelbrot_sp_thread(void* data) {
     float32x2_t n = norm(z);
     for (uint8_t i = 0; i < 2; i++) {
       if ((iter[i] >= m->_iteration_limit) || (n[i] >= 4)){
-	SDL_Color &col = m->_palette->colors[iter[i]];
-	m->_display->Draw_pixel(x[i], y[i], size[i], col.r, col.g, col.b, col.a);
+	m->_draw_point(x[i], y[i], size[i], iter[i], z.get(i));
 
 	reset_values(i);
       }
@@ -332,8 +337,7 @@ int Mandelbrot_dp_thread(void* data) {
 
     double n = norm(z);
     if ((iter >= m->_iteration_limit) || (n >= 4)) {
-      SDL_Color &col = m->_palette->colors[iter];
-      m->_display->Draw_pixel(x, y, size, col.r, col.g, col.b, col.a);
+      m->_draw_point(x, y, size, iter, z);
 
       reset_values();
     }

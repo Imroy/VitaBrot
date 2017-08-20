@@ -49,6 +49,9 @@ private:
 
   void _check_prec(void);
 
+  template <typename F>
+  void _draw_point(uint32_t x, uint32_t y, uint32_t size, uint32_t iter, std::complex<F> z);
+
 public:
   Mandelbrot(Display& d);
   ~Mandelbrot();
