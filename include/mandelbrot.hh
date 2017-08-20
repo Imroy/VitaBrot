@@ -27,8 +27,8 @@
 class Mandelbrot {
 private:
   Display *_display;
-  std::complex<float> _centre[2];
-  float _window_size[2], _pixel_size[2];
+  std::complex<double> _centre[2];
+  double _window_size[2], _pixel_size[2];
   uint32_t _iteration_limit;
   bool _running, _shutdown, _julia;
   SDL_Palette *_palette;
@@ -54,13 +54,13 @@ public:
   void switch_type(void);
 
   // Move the window
-  void move(float c_re, float c_im, float size);
+  void move(double c_re, double c_im, double size);
 
   // Move the window relative to its size
-  void move_rel(float r_re, float r_im);
+  void move_rel(double r_re, double r_im);
 
   // Zoom the window relative to its size
-  void zoom_rel(float rel);
+  void zoom_rel(double rel);
 
   // Reset the drawing of pixels
   void reset(void);

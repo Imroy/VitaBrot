@@ -78,6 +78,11 @@ public:
     _imags[i] = c.imag();
   }
 
+  void set(uint8_t i, std::complex<double> c) {
+    _reals[i] = (float)c.real();
+    _imags[i] = (float)c.imag();
+  }
+
   float real(uint8_t i) const { return _reals[i]; }
   float imag(uint8_t i) const { return _imags[i]; }
 

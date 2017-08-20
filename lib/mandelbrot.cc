@@ -30,8 +30,8 @@ Mandelbrot::Mandelbrot(Display& d) :
   _coords_mutex(SDL_CreateMutex()),
   _restart_sem(0)
 {
-  _centre[0] = std::complex<float>(-0.5, 0.0);
-  _centre[1] = std::complex<float>(0, 0);
+  _centre[0] = std::complex<double>(-0.5, 0.0);
+  _centre[1] = std::complex<double>(0, 0);
 
   _window_size[0] = 4;
   _window_size[1] = 4;
@@ -51,23 +51,23 @@ void Mandelbrot::switch_type(void) {
   _julia ^= true;
 
   if (_julia) {
-    _centre[1] = std::complex<float>(0, 0);
+    _centre[1] = std::complex<double>(0, 0);
     _window_size[1] = 4;
     _pixel_size[1] = _window_size[1] / _display->width();
   }
 }
 
-void Mandelbrot::move(float c_re, float c_im, float size) {
-  _centre[_julia] = std::complex<float>(c_re, c_im);
+void Mandelbrot::move(double c_re, double c_im, double size) {
+  _centre[_julia] = std::complex<double>(c_re, c_im);
   _window_size[_julia] = size;
   _pixel_size[_julia] = size / _display->width();
 }
 
-void Mandelbrot::move_rel(float r_re, float r_im) {
-  _centre[_julia] += std::complex<float>(r_re, r_im) * _window_size[_julia];
+void Mandelbrot::move_rel(double r_re, double r_im) {
+  _centre[_julia] += std::complex<double>(r_re, r_im) * _window_size[_julia];
 }
 
-void Mandelbrot::zoom_rel(float rel) {
+void Mandelbrot::zoom_rel(double rel) {
   _window_size[_julia] *= rel;
   _pixel_size[_julia] = _window_size[_julia] / _display->width();
 }
@@ -221,8 +221,8 @@ int Mandelbrot_thread(void* data) {
 
   auto reset_values = [m, &x, &y, &size, &z, &c, &iter](uint8_t i) {
     m->_get_coords(x[i], y[i], size[i]);
-    std::complex<float> point(x[i] - (m->_display->width() * 0.5),
-			      (m->_display->height() / m->_display->height()) * (y[i] - (m->_display->height() * 0.5)));
+    std::complex<double> point(x[i] - (m->_display->width() * 0.5),
+			       (m->_display->height() / m->_display->height()) * (y[i] - (m->_display->height() * 0.5)));
     point *= m->_pixel_size[m->_julia];
     if (m->_julia) {
       // Julia set
