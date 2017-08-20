@@ -209,6 +209,7 @@ void Mandelbrot::stop_threads(void) {
     int status;
     SDL_WaitThread(_threads[i], &status);
   }
+  _shutdown = false;
 }
 
 int Mandelbrot_thread(void* data) {
