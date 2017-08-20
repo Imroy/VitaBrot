@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
   for (uint8_t i = 0; i < VITA_NUM_BUTTONS; i++)
     buttons[i] = false;
 
-  uint32_t last_switch = 0;
+  uint32_t last_switch = 0, last_move = 0;
   bool running = true;
   while (running) {
     disp.Refresh();
@@ -96,15 +96,16 @@ int main(int argc, char *argv[]) {
       continue;
     }
 
-    // Don't move/zoom until we've drawn a few passes
-    if (m.pass() > 3)
-      continue;
 
     if (buttons[VITA_SQUARE] && (SDL_GetTicks() > last_switch + 400)) {
       m.switch_type();
       changed = true;
       last_switch = SDL_GetTicks();
     }
+
+    // Limit rate of moving/zooming to 10 Hz
+    if (SDL_GetTicks() < last_move + 100)
+      continue;
 
     if (buttons[VITA_UP]) {
       m.move_rel(0, -0.01);
@@ -137,6 +138,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (changed)
+      last_move = SDL_GetTicks();
       m.reset();
   }
 
