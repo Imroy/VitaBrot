@@ -18,16 +18,16 @@
 
 #pragma once
 
+#include <complex>
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_thread.h>
-#include "complex.hh"
 #include "complexpair.hh"
 #include "display.hh"
 
 class Mandelbrot {
 private:
   Display *_display;
-  complex _centre[2];
+  std::complex<float> _centre[2];
   float _window_size[2], _pixel_size[2];
   uint32_t _iteration_limit;
   bool _running, _shutdown, _julia;

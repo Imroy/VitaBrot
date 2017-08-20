@@ -18,9 +18,14 @@
 
 #pragma once
 
-#include "complex.hh"
+#include <complex>
+
+template <typename T>
+constexpr T sqr(T val) { return val * val; }
 
 #ifdef __ARM_NEON__
+#include <arm_neon.h>
+
 typedef uint32x2_t boolx2_t;
 #else
 typedef float float32x2_t __attribute__ ((vector_size (8)));
@@ -61,14 +66,14 @@ public:
     return *this;
   }
 
-  complex get(uint8_t i) const { return complex(_reals[i], _imags[i]); }
+  std::complex<float> get(uint8_t i) const { return std::complex<float>(_reals[i], _imags[i]); }
 
   void set(uint8_t i, float re = 0, float im = 0) {
     _reals[i] = re;
     _imags[i] = im;
   }
 
-  void set(uint8_t i, complex c) {
+  void set(uint8_t i, std::complex<float> c) {
     _reals[i] = c.real();
     _imags[i] = c.imag();
   }
