@@ -251,14 +251,15 @@ int Mandelbrot_sp_thread(void* data) {
     std::complex<float> point(x[i] - (m->_display->width() * 0.5),
 			      (m->_display->height() / m->_display->height()) * (y[i] - (m->_display->height() * 0.5)));
     point *= m->_pixel_size[m->_julia];
+    point += m->_centre[m->_julia];
     if (m->_julia) {
       // Julia set
-      z.set(i, m->_centre[1] + point);
+      z.set(i, point);
       c.set(i, m->_centre[0]);
     } else {
       // Mandelbrot set
       z.set(i, 0);
-      c.set(i, m->_centre[0] + point);
+      c.set(i, point);
     }
     iter[i] = 0;
   };
@@ -307,14 +308,15 @@ int Mandelbrot_dp_thread(void* data) {
     std::complex<double> point(x - (m->_display->width() * 0.5),
 			       (m->_display->height() / m->_display->height()) * (y - (m->_display->height() * 0.5)));
     point *= m->_pixel_size[m->_julia];
+    point += m->_centre[m->_julia];
     if (m->_julia) {
       // Julia set
-      z = m->_centre[1] + point;
+      z = point;
       c = m->_centre[0];
     } else {
       // Mandelbrot set
       z = 0;
-      c = m->_centre[0] + point;
+      c = point;
     }
     iter = 0;
   };
