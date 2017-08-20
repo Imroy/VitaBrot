@@ -248,8 +248,8 @@ int Mandelbrot_sp_thread(void* data) {
 
   auto reset_values = [m, &x, &y, &size, &z, &c, &iter](uint8_t i) {
     m->_get_coords(x[i], y[i], size[i]);
-    std::complex<double> point(x[i] - (m->_display->width() * 0.5),
-			       (m->_display->height() / m->_display->height()) * (y[i] - (m->_display->height() * 0.5)));
+    std::complex<float> point(x[i] - (m->_display->width() * 0.5),
+			      (m->_display->height() / m->_display->height()) * (y[i] - (m->_display->height() * 0.5)));
     point *= m->_pixel_size[m->_julia];
     if (m->_julia) {
       // Julia set
