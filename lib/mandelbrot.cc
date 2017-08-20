@@ -282,12 +282,26 @@ int Mandelbrot_sp_thread(void* data) {
     iter[0]++;
     iter[1]++;
 
-    float32x2_t n = norm(z);
+    bool done[2] = { false, false };
     for (uint8_t i = 0; i < 2; i++) {
-      if ((iter[i] >= m->_iteration_limit) || (n[i] >= 4)){
+      if ((iter[i] >= m->_iteration_limit)
+	  || (z.real(i) < -2) || (z.real(i) > 2)
+	  || (z.imag(i) < -2) || (z.imag(i) > 2)) {
 	m->_draw_point(x[i], y[i], size[i], iter[i], z.get(i));
 
 	reset_values(i);
+	done[i] = true;
+      }
+    }
+
+    if (!done[0] && !done[1]) {
+      float32x2_t n = norm(z);
+      for (uint8_t i = 0; i < 2; i++) {
+	if (!done[i] && (n[i] >= 4)) {
+	  m->_draw_point(x[i], y[i], size[i], iter[i], z.get(i));
+
+	  reset_values(i);
+	}
       }
     }
   }
@@ -337,8 +351,10 @@ int Mandelbrot_dp_thread(void* data) {
     z = sqr(z) + c;
     iter++;
 
-    double n = norm(z);
-    if ((iter >= m->_iteration_limit) || (n >= 4)) {
+    if ((iter >= m->_iteration_limit)
+	|| (z.real() < -2) || (z.real() > 2)
+	|| (z.imag() < -2) || (z.imag() > 2)
+	|| (norm(z) >= 4)) {
       m->_draw_point(x, y, size, iter, z);
 
       reset_values();
