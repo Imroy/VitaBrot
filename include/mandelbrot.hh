@@ -56,6 +56,7 @@ public:
   Mandelbrot(Display& d);
   ~Mandelbrot();
 
+  double window_size(void) const { return _window_size[_julia]; }
   int32_t pass(void) const { return _pass; }
 
   void switch_type(void);
