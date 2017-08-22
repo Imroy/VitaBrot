@@ -21,6 +21,7 @@
 #include <complex>
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_thread.h>
+#include <gmpxx.h>
 #include "complexpair.hh"
 #include "display.hh"
 
@@ -29,7 +30,9 @@ private:
   Display *_display;
   uint32_t _prec;
   std::complex<double> _centre[2];
+  std::complex<mpf_class> _centre_mpf[2];
   double _window_size[2], _pixel_size[2];
+  mpf_class _window_size_mpf[2], _pixel_size_mpf[2];
   uint32_t _iteration_limit;
   bool _running, _shutdown, _julia;
   SDL_Palette *_palette;
@@ -46,6 +49,7 @@ private:
   // Allow the thread function to access private data and methods
   friend int Mandelbrot_sp_thread(void* data);
   friend int Mandelbrot_dp_thread(void* data);
+  friend int Mandelbrot_mp_thread(void* data);
 
   void _check_prec(void);
 
@@ -61,7 +65,7 @@ public:
   void switch_type(void);
 
   // Move the window
-  void move(double c_re, double c_im, double size);
+  void move(mpf_class c_re, mpf_class c_im, mpf_class size);
 
   // Move the window relative to its size
   void move_rel(double r_re, double r_im);
@@ -82,3 +86,4 @@ public:
 
 int Mandelbrot_sp_thread(void* data);
 int Mandelbrot_dp_thread(void* data);
+int Mandelbrot_mp_thread(void* data);

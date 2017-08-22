@@ -33,12 +33,18 @@ Mandelbrot::Mandelbrot(Display& d) :
 {
   _centre[0] = std::complex<double>(-0.5, 0.0);
   _centre[1] = std::complex<double>(0, 0);
+  _centre_mpf[0] = std::complex<mpf_class>(-0.5, 0.0);
+  _centre_mpf[1] = std::complex<mpf_class>(0, 0);
 
   _window_size[0] = 4;
   _window_size[1] = 4;
-
   _pixel_size[0] = _window_size[0] / _display->width();
   _pixel_size[1] = _window_size[1] / _display->width();
+
+  _window_size_mpf[0] = 4;
+  _window_size_mpf[1] = 4;
+  _pixel_size_mpf[0] = _window_size_mpf[0] / _display->width();
+  _pixel_size_mpf[1] = _window_size_mpf[1] / _display->width();
 }
 
 Mandelbrot::~Mandelbrot() {
@@ -53,26 +59,38 @@ void Mandelbrot::switch_type(void) {
 
   if (_julia) {
     _centre[1] = std::complex<double>(0, 0);
+    _centre_mpf[1] = std::complex<mpf_class>(0, 0);
+
     _window_size[1] = 4;
+    _window_size_mpf[1] = 4;
     _pixel_size[1] = _window_size[1] / _display->width();
+    _pixel_size_mpf[1] = _window_size_mpf[1] / _display->width();
   }
 }
 
-void Mandelbrot::move(double c_re, double c_im, double size) {
-  _centre[_julia] = std::complex<double>(c_re, c_im);
-  _window_size[_julia] = size;
-  _pixel_size[_julia] = size / _display->width();
+void Mandelbrot::move(mpf_class c_re, mpf_class c_im, mpf_class size) {
+  _centre[_julia] = std::complex<double>(c_re.get_d(), c_im.get_d());
+  _centre_mpf[_julia] = std::complex<mpf_class>(c_re, c_im);
+
+  _window_size[_julia] = size.get_d();
+  _pixel_size[_julia] = size.get_d() / _display->width();
+
+  _window_size_mpf[_julia] = size;
+  _pixel_size_mpf[_julia] = size / _display->width();
 
   _check_prec();
 }
 
 void Mandelbrot::move_rel(double r_re, double r_im) {
-  _centre[_julia] += std::complex<double>(r_re, r_im) * _window_size[_julia];
+  _centre_mpf[_julia] += std::complex<mpf_class>(r_re, r_im) * _window_size_mpf[_julia];
+  _centre[_julia] = std::complex<double>(_centre_mpf[_julia].real().get_d(), _centre_mpf[_julia].imag().get_d());
 }
 
 void Mandelbrot::zoom_rel(double rel) {
-  _window_size[_julia] *= rel;
-  _pixel_size[_julia] = _window_size[_julia] / _display->width();
+  _window_size_mpf[_julia] *= rel;
+  _window_size[_julia] = _window_size_mpf[_julia].get_d();
+  _pixel_size_mpf[_julia] = _window_size_mpf[_julia] / _display->width();
+  _pixel_size[_julia] = _pixel_size_mpf[_julia].get_d();
 
   _check_prec();
 }
@@ -89,6 +107,17 @@ void Mandelbrot::_check_prec(void) {
   uint32_t this_prec = 32;
   if (_window_size[_julia] < 1e-7 * _display->width())
     this_prec = 64;
+  else if (cmp(_window_size_mpf[_julia], 1e-15 * _display->width()) < 0)
+    this_prec = 128;
+
+  if (this_prec > 64) {
+    for (uint8_t i = 0; i < 2; i++) {
+    _centre_mpf[i].real().set_prec(this_prec);
+    _centre_mpf[i].imag().set_prec(this_prec);
+    _window_size_mpf[i].set_prec(this_prec);
+    _pixel_size_mpf[i].set_prec(this_prec);
+    }
+  }
   if (this_prec != _prec) {
     stop_threads();
     _prec = this_prec;
@@ -215,6 +244,8 @@ void Mandelbrot::start_threads(void) {
     fn = Mandelbrot_sp_thread;
   else if (_prec <= 64)
     fn = Mandelbrot_dp_thread;
+  else
+    fn = Mandelbrot_mp_thread;
 
   for (uint8_t i = 0; i < 4; i++) {
     char name[12];
@@ -354,6 +385,61 @@ int Mandelbrot_dp_thread(void* data) {
     if ((iter >= m->_iteration_limit)
 	|| (z.real() < -2) || (z.real() > 2)
 	|| (z.imag() < -2) || (z.imag() > 2)
+	|| (norm(z) >= 4)) {
+      m->_draw_point(x, y, size, iter, z);
+
+      reset_values();
+    }
+  }
+
+  return 0;
+}
+
+int Mandelbrot_mp_thread(void* data) {
+  Mandelbrot *m = (Mandelbrot*)data;
+
+  uint32_t x, y, size;
+  std::complex<mpf_class> z, c;
+  uint32_t iter;
+  uint32_t restart_val;
+
+  auto reset_values = [m, &x, &y, &size, &z, &c, &iter](void) {
+    m->_get_coords(x, y, size);
+    std::complex<mpf_class> point(x - (m->_display->width() * 0.5),
+				  (m->_display->height() / m->_display->height()) * (y - (m->_display->height() * 0.5)));
+    point *= m->_pixel_size_mpf[m->_julia];
+    point += m->_centre_mpf[m->_julia];
+    if (m->_julia) {
+      // Julia set
+      z = point;
+      c = m->_centre_mpf[0];
+    } else {
+      // Mandelbrot set
+      z = 0;
+      c = point;
+    }
+    iter = 0;
+  };
+
+ restart:
+  restart_val = m->_restart_sem;
+  reset_values();
+
+  while (!m->_shutdown) {
+    while (!m->_running && !m->_shutdown)
+      SDL_Delay(1);
+    if (m->_shutdown)
+      return 0;
+
+    if (m->_restart_sem != restart_val)
+      goto restart;
+
+    z = sqr(z) + c;
+    iter++;
+
+    if ((iter >= m->_iteration_limit)
+	|| (cmp(z.real(), -2) < 0) || (cmp(z.real(), 2) > 0)
+	|| (cmp(z.imag(), -2) < 0) || (cmp(z.imag(), 2) > 0)
 	|| (norm(z) >= 4)) {
       m->_draw_point(x, y, size, iter, z);
 
