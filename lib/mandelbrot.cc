@@ -213,7 +213,7 @@ void Mandelbrot::start_threads(void) {
   SDL_ThreadFunction fn;
   if (_prec <= 32)
     fn = Mandelbrot_sp_thread;
-  else if (_prec <= 64)
+  else
     fn = Mandelbrot_dp_thread;
 
   for (uint8_t i = 0; i < 4; i++) {
