@@ -8,11 +8,11 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   endif()
 endif()
 
-set(SHORT_NAME vitabrot)
+set(SHORT_NAME VitaBrot)
 project(${SHORT_NAME})
 include("${VITASDK}/share/vita.cmake" REQUIRED)
 
-set(VITA_APP_NAME "VitaBrot")
+set(VITA_APP_NAME "Mandelbrot Explorer")
 set(VITA_TITLEID  "VITABROT1")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -O4 -mtune=cortex-a9 -Wall")
