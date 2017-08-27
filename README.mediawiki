@@ -1,0 +1,29 @@
+= VitaBrot =
+This is a [https://en.wikipedia.org/wiki/Mandelbrot_set Mandelbrot] and [https://en.wikipedia.org/wiki/Julia_set Julia set] explorer for the Playstation Vita.
+
+Note: To build this you will need [https://github.com/Cpasjuste/SDL-Vita Cpasjuste's SDL branch] for the input changes.
+
+== Features ==
+* Multithreaded to use all four CPUs at the same time
+* Up-clocks the Vita to its full 444 Mhz clock speed
+* Uses NEON instructions to compute two single-precision points at the same time
+* Automatically switches to double-precision operations when zoomed in far enough
+* Uses the default palette from [http://matek.hu/xaos/doku.php XaoS]
+
+== Controls ==
+* Use '''d-pad''' to move the current window around
+* Use '''right shoulder''' to zoom in, '''left shoulder''' to zoom out
+* Use '''Square''' to switch to and from Julia mode
+** When switching to Julia mode, the centre of the Mandelbrot window is used as the value of 'c'
+** When switching back the Mandelbrot window is restored
+* Use '''Circle''' to exit
+
+== Todo ==
+(none of these are promises!)
+* Gotta go faster!
+* Zoom more like Xaos?
+* Touch controls for moving and zooming
+* Add menu for changing more options
+** Change palette
+** Change in/out colour mode
+* Save images as PNG (or just rely on the pngshot plugin?)
