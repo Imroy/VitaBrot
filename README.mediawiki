@@ -3,7 +3,7 @@ This is a [https://en.wikipedia.org/wiki/Mandelbrot_set Mandelbrot] and [https:/
 
 == Features ==
 * Multithreaded to use all four CPUs at the same time
-* Up-clocks the Vita to its full 444 Mhz clock speed
+* Up-clocks the Vita to its full 500 MHz clock speed
 * Uses NEON instructions to compute two single-precision points at the same time
 * Automatically switches to double-precision operations when zoomed in far enough
 * Uses the default palette from [http://matek.hu/xaos/doku.php XaoS]

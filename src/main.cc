@@ -58,10 +58,10 @@ int main(int argc, char *argv[]) {
   old_gpuclock = scePowerGetGpuClockFrequency();
 
   // Set maximum performance
-  scePowerSetArmClockFrequency(444);
+  scePowerSetArmClockFrequency(500);
   scePowerSetBusClockFrequency(222);
-  scePowerSetGpuClockFrequency(222);
   scePowerSetGpuXbarClockFrequency(166);
+  scePowerSetGpuClockFrequency(333);
 
   Mandelbrot m(disp);
   m.move(-0.5, 0.0, 4.0);
