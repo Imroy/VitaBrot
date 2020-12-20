@@ -40,6 +40,8 @@ target_link_libraries(${SHORT_NAME}
   SceCommonDialog_stub
   ScePower_stub
   SceTouch_stub
+  SceHid_stub
+  SceAppMgr_stub
   m
 )
 
