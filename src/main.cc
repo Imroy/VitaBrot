@@ -50,7 +50,14 @@ int main(int argc, char *argv[]) {
   }
 
 
-  // Maximum performance
+  // Save old clock frequencies
+  int old_armclock, old_busclock, old_gpuxbarclock, old_gpuclock;
+  old_armclock = scePowerGetArmClockFrequency();
+  old_busclock = scePowerGetBusClockFrequency();
+  old_gpuxbarclock = scePowerGetGpuXbarClockFrequency();
+  old_gpuclock = scePowerGetGpuClockFrequency();
+
+  // Set maximum performance
   scePowerSetArmClockFrequency(444);
   scePowerSetBusClockFrequency(222);
   scePowerSetGpuClockFrequency(222);
@@ -145,11 +152,11 @@ int main(int argc, char *argv[]) {
 
   m.stop_threads();
 
-  // Maximum battery
-  scePowerSetArmClockFrequency(111);
-  scePowerSetBusClockFrequency(111);
-  scePowerSetGpuClockFrequency(111);
-  scePowerSetGpuXbarClockFrequency(111);
+  // Restore clock frequencies
+  scePowerSetArmClockFrequency(old_armclock);
+  scePowerSetBusClockFrequency(old_busclock);
+  scePowerSetGpuXbarClockFrequency(old_gpuxbarclock);
+  scePowerSetGpuClockFrequency(old_gpuclock);
 
   SDL_JoystickClose(joy);
 
