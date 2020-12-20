@@ -1,8 +1,6 @@
 = VitaBrot =
 This is a [https://en.wikipedia.org/wiki/Mandelbrot_set Mandelbrot] and [https://en.wikipedia.org/wiki/Julia_set Julia set] explorer for the Playstation Vita.
 
-Note: To build this you will need [https://github.com/Cpasjuste/SDL-Vita Cpasjuste's SDL branch] for the input changes.
-
 == Features ==
 * Multithreaded to use all four CPUs at the same time
 * Up-clocks the Vita to its full 444 Mhz clock speed
